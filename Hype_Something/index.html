@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>小红书加热判断工具</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-panel" aria-label="历史数据导入与训练设置">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">R</div>
+          <div>
+            <h1>加热判断</h1>
+            <p>小红书投放学习工具</p>
+          </div>
+        </div>
+
+        <section class="import-panel" aria-label="导入历史数据">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Historical Data</p>
+              <h2>导入历史数据</h2>
+            </div>
+            <span class="status-dot" id="dataStatus">待导入</span>
+          </div>
+
+          <label class="file-drop" id="fileDrop">
+            <input id="fileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" />
+            <span class="file-icon" aria-hidden="true"></span>
+            <span>上传 CSV / TSV / TXT</span>
+          </label>
+
+          <label class="textarea-label" for="historyInput">
+            <span>或直接粘贴表格</span>
+            <textarea
+              id="historyInput"
+              spellcheck="false"
+              placeholder="从 Excel / 飞书 / 金山表格复制包含表头的历史数据，粘贴到这里。建议包含标题、正文/内容、现有互动量、综合 CPE。"
+            ></textarea>
+          </label>
+
+          <div class="button-row">
+            <button class="primary-button" id="trainButton">
+              <span class="button-icon train-icon" aria-hidden="true"></span>
+              学习历史数据
+            </button>
+            <button class="secondary-button" id="clearButton" type="button">
+              <span class="button-icon clear-icon" aria-hidden="true"></span>
+              清空
+            </button>
+          </div>
+
+          <div class="append-panel">
+            <button class="append-toggle" id="appendToggle" type="button">
+              <span class="section-title">＋ 追加本月新加热数据</span>
+              <span class="cookie-chevron" id="appendChevron" aria-hidden="true">▸</span>
+            </button>
+            <div class="append-body" id="appendBody" hidden>
+              <p class="field-hint">
+                从金山/飞书把本月加热汇总 tab 导出为 CSV，粘贴或上传到这里。会自动补「加热渠道」（按发布日期）和「笔记ID」（从链接），按笔记ID/链接去重后并入现有训练集并重训。无需手工合并。
+              </p>
+              <label class="file-drop small" id="appendFileDrop">
+                <input id="appendFileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" />
+                <span>上传本月 CSV / TSV</span>
+              </label>
+              <textarea
+                id="appendInput"
+                class="append-textarea"
+                spellcheck="false"
+                placeholder="或直接粘贴本月新加热数据（含表头）。"
+              ></textarea>
+              <button class="primary-button full" id="appendButton" type="button">追加并重训</button>
+              <p class="append-result" id="appendResult"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-panel" aria-label="模型判断设置">
+          <div class="section-title">判断口径</div>
+          <label class="control-row">
+            <span>优秀 CPE</span>
+            <select id="cpeMode">
+              <option value="auto">按历史自动学习</option>
+              <option value="custom">使用手动阈值</option>
+            </select>
+          </label>
+          <label class="control-row" id="customCpeRow">
+            <span>手动阈值</span>
+            <input id="customCpe" type="number" min="0.1" step="0.1" value="2.0" />
+          </label>
+          <label class="control-row">
+            <span>最低总互动</span>
+            <input id="minInteractions" type="number" min="0" step="1" value="0" />
+          </label>
+          <label class="control-row">
+            <span>保守程度</span>
+            <select id="strictness">
+              <option value="balanced">均衡</option>
+              <option value="strict">更保守</option>
+              <option value="growth">偏增长</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="cookie-panel" aria-label="Cookie 设置">
+          <button class="cookie-toggle" id="cookieToggle" type="button">
+            <span class="section-title">Cookie 设置</span>
+            <span class="cookie-badge" id="cookieBadge">检测中...</span>
+            <span class="cookie-chevron" id="cookieChevron" aria-hidden="true">▸</span>
+          </button>
+          <div class="cookie-body" id="cookieBody" hidden>
+            <p class="cookie-steps">
+              <strong>怎么获取 Cookie：</strong><br>
+              1. 在 Chrome 打开 <code>xiaohongshu.com</code> 并登录<br>
+              2. 按 <code>F12</code> 打开开发者工具 → 点「Network（网络）」标签<br>
+              3. 刷新页面，点左侧列表里任意一条 <code>www.xiaohongshu.com</code> 请求<br>
+              4. 右侧「Headers（标头）」→ 找到「<strong>Cookie</strong>」→ 右键复制整个值<br>
+              5. 粘贴到下方，点「保存」
+            </p>
+            <textarea
+              id="cookieInput"
+              class="cookie-textarea"
+              spellcheck="false"
+              placeholder="a1=...; webId=...; web_session=...; （粘贴完整 Cookie 值）"
+            ></textarea>
+            <div class="cookie-actions">
+              <button class="primary-button" id="saveCookieButton" type="button">保存</button>
+              <button class="secondary-button" id="clearCookieButton" type="button">清空</button>
+            </div>
+            <p class="cookie-hint" id="cookieHint"></p>
+          </div>
+        </section>
+
+        <section class="llm-panel" aria-label="LLM 设置">
+          <button class="cookie-toggle" id="llmToggle" type="button">
+            <span class="section-title">LLM 设置</span>
+            <span class="cookie-badge" id="llmBadge">检测中...</span>
+            <span class="cookie-chevron" id="llmChevron" aria-hidden="true">▸</span>
+          </button>
+          <div class="cookie-body" id="llmBody" hidden>
+            <p class="cookie-steps">
+              <strong>混合预测怎么工作：</strong><br>
+              先用本地模型找相似历史和预测 CPE，再让 LLM 结合标题、正文、封面和历史样本做最终判断。API Key 只保存在本次本地服务内存，不写入文件。
+            </p>
+            <label class="llm-label">
+              <span>服务商</span>
+              <select id="llmProviderSelect">
+                <option value="openai">OpenAI</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="gemini">Gemini</option>
+                <option value="compatible">OpenAI兼容</option>
+              </select>
+            </label>
+            <label class="llm-label">
+              <span>API Key</span>
+              <input id="llmApiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+            </label>
+            <label class="llm-label">
+              <span>模型</span>
+              <input id="llmModelInput" type="text" placeholder="gpt-5.1" autocomplete="off" />
+            </label>
+            <label class="llm-label" id="llmBaseUrlLabel">
+              <span>Base URL</span>
+              <input id="llmBaseUrlInput" type="url" placeholder="仅 OpenAI兼容 服务商需要填写" autocomplete="off" />
+            </label>
+            <label class="toggle-row llm-image-row">
+              <input id="llmSendImageToggle" type="checkbox" checked />
+              <span>支持时发送封面图片</span>
+            </label>
+            <div class="cookie-actions">
+              <button class="primary-button" id="saveLlmButton" type="button">保存</button>
+              <button class="secondary-button" id="clearLlmButton" type="button">清空</button>
+            </div>
+            <p class="cookie-hint" id="llmHint"></p>
+          </div>
+        </section>
+
+        <section class="model-card" aria-label="模型状态">
+          <div class="section-title">模型状态</div>
+          <div class="model-line">
+            <span>有效样本</span>
+            <strong id="sampleCount">0</strong>
+          </div>
+          <div class="model-line">
+            <span>成功样本</span>
+            <strong id="successCount">0</strong>
+          </div>
+          <div class="model-line">
+            <span>自动 CPE 阈值</span>
+            <strong id="autoCpe">--</strong>
+          </div>
+          <div class="model-line">
+            <span>中位投放</span>
+            <strong id="medianSpend">--</strong>
+          </div>
+        </section>
+
+        <button class="secondary-button full" id="exportModelButton" disabled>
+          <span class="button-icon export-icon" aria-hidden="true"></span>
+          导出模型摘要
+        </button>
+      </aside>
+
+      <main class="workspace">
+        <header class="top-bar">
+          <div>
+            <p class="eyebrow">Prediction Workspace</p>
+            <h2>输入新帖子，判断是否值得加热</h2>
+          </div>
+          <div class="trained-pill" id="trainedPill">模型未训练</div>
+        </header>
+
+        <section class="predict-layout">
+          <form class="predict-form" id="predictForm">
+            <div class="form-grid">
+              <label class="full-field url-fetch-field">
+                <span>粘贴笔记链接，自动获取标题 / 正文 / 封面 / 当前互动</span>
+                <div class="url-fetch-row">
+                  <input
+                    id="postUrl"
+                    type="url"
+                    placeholder="https://www.xiaohongshu.com/explore/... 或 App 复制的 http://xhslink.com/..."
+                    autocomplete="off"
+                  />
+                  <button class="secondary-button" id="fetchPostButton" type="button">
+                    <span class="button-icon fetch-icon" aria-hidden="true"></span>
+                    自动获取
+                  </button>
+                </div>
+                <p class="field-hint" id="fetchPostHint">
+                  需要先在终端运行 <code>node server.js</code>，再访问 http://localhost:5173 打开本工具。
+                </p>
+              </label>
+              <label>
+                <span>帖子标题</span>
+                <input id="newTitle" type="text" placeholder="例如：现在的专车也太卷了吧！" autocomplete="off" />
+              </label>
+              <label class="full-field">
+                <span>帖子正文</span>
+                <textarea
+                  id="newBody"
+                  class="compact-textarea"
+                  spellcheck="false"
+                  placeholder="粘贴正文内容，包括故事、场景、痛点、福利、评论引导等。"
+                ></textarea>
+              </label>
+              <label class="full-field cover-field">
+                <span>帖子封面</span>
+                <input id="coverInput" type="file" accept="image/*" />
+                <div class="cover-upload">
+                  <img id="coverPreview" alt="" />
+                  <div>
+                    <strong id="coverStatus">上传封面图后参与判断</strong>
+                    <p>本地识别亮度、对比度、清晰度、信息密度、色彩和人物线索。</p>
+                  </div>
+                </div>
+                <div class="cover-metrics" id="coverMetrics"></div>
+              </label>
+              <label>
+                <span>当前总互动量</span>
+                <input id="newPreInteractions" type="number" min="0" step="1" placeholder="例如：8" />
+              </label>
+              <label>
+                <span>笔记链接或 ID</span>
+                <input id="newNoteId" type="text" placeholder="可选，用于报告记录" autocomplete="off" />
+              </label>
+              <label>
+                <span>当前点赞</span>
+                <input id="newLikes" type="number" min="0" step="1" placeholder="可选" />
+              </label>
+              <label>
+                <span>当前收藏</span>
+                <input id="newCollects" type="number" min="0" step="1" placeholder="可选" />
+              </label>
+              <label>
+                <span>当前评论</span>
+                <input id="newComments" type="number" min="0" step="1" placeholder="可选" />
+              </label>
+              <label>
+                <span>当前分享</span>
+                <input id="newShares" type="number" min="0" step="1" placeholder="可选" />
+              </label>
+            </div>
+            <div class="button-row">
+              <button class="primary-button" type="submit">
+                <span class="button-icon predict-icon" aria-hidden="true"></span>
+                判断
+              </button>
+              <button class="secondary-button" id="demoButton" type="button">
+                <span class="button-icon sample-icon" aria-hidden="true"></span>
+                填入示例
+              </button>
+              <button class="secondary-button" id="llmPredictButton" type="button" disabled>
+                <span class="button-icon llm-icon" aria-hidden="true"></span>
+                LLM混合判断
+              </button>
+            </div>
+          </form>
+
+          <section class="decision-card" id="decisionCard" aria-live="polite">
+            <div class="empty-decision">
+              <div class="empty-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+              <p>训练模型后，这里会显示是否值得加热、预测 CPE、建议测试金额和原因。</p>
+            </div>
+          </section>
+        </section>
+
+        <nav class="tabs" aria-label="分析视图">
+          <button class="tab active" data-tab="signals" type="button">判断依据</button>
+          <button class="tab" data-tab="neighbors" type="button">相似历史</button>
+          <button class="tab" data-tab="data" type="button">数据质量</button>
+        </nav>
+
+        <section class="panel active" id="signalsPanel">
+          <div class="insight-grid">
+            <article class="insight-card">
+              <h3>模型会学习什么</h3>
+              <p>标题、正文、封面图、当前互动量和互动结构，以及这些信号在历史投放里的 CPE 和总互动表现。</p>
+            </article>
+            <article class="insight-card">
+              <h3>默认成功定义</h3>
+              <p>综合 CPE 越低越好，同时参考总互动规模。你可以在左侧切换为手动 CPE 阈值。</p>
+            </article>
+            <article class="insight-card">
+              <h3>适用边界</h3>
+              <p>历史样本越多判断越准，适合做投前初筛和小额测试建议，不适合当作绝对结论。工具会显示置信度和相似样本。</p>
+            </article>
+          </div>
+          <div class="signal-list" id="signalList"></div>
+        </section>
+
+        <section class="panel" id="neighborsPanel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>相似度</th>
+                  <th>内容</th>
+                  <th>现有互动</th>
+                  <th>总互动</th>
+                  <th>金额</th>
+                  <th>CPE</th>
+                  <th>结果</th>
+                </tr>
+              </thead>
+              <tbody id="neighborsBody">
+                <tr><td colspan="7" class="muted-cell">训练并预测后显示相似历史样本</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="dataPanel">
+          <div class="quality-grid">
+            <article class="quality-card">
+              <span>已识别列</span>
+              <strong id="recognizedColumns">--</strong>
+            </article>
+            <article class="quality-card">
+              <span>缺少 CPE</span>
+              <strong id="missingCpe">--</strong>
+            </article>
+            <article class="quality-card">
+              <span>缺少标题/正文</span>
+              <strong id="missingTitle">--</strong>
+            </article>
+            <article class="quality-card">
+              <span>可用率</span>
+              <strong id="usableRate">--</strong>
+            </article>
+          </div>
+          <div class="warning-list" id="warningList"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="signalTemplate">
+      <article class="signal-item">
+        <div>
+          <h3></h3>
+          <p></p>
+        </div>
+        <strong></strong>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+/**
+ * Copyright (c) Andy Zhou. (https://github.com/iszhouhua)
+ *
+ * This source code is licensed under the GPL-3.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export default defineBackground(() => {
+    onMessage('openPopup', () => {
+        return browser.action.openPopup();
+    });
+
+    onMessage('openTaskDialog', ({ data, sender }) => {
+        return sendMessage('openTaskDialog', data, sender.tab?.id);
+    });
+
+    onMessage('fetch', ({ data, sender }) => {
+        return browser.scripting.executeScript({
+            target: {
+                tabId: sender.tab?.id!
+            },
+            world: "MAIN",
+            // @ts-ignore
+            func: (data) => window.fetch(data.url, data).then(res => res.json()).catch(() => null),
+            args: [data]
+
+        }).then(res => res?.[0]?.result);
+    });
+
+    onMessage('mnsv2', ({ data, sender }) => {
+        return browser.scripting.executeScript({
+            target: {
+                tabId: sender.tab?.id!
+            },
+            world: "MAIN",
+            func: (a,b,c) => {
+                // @ts-ignore
+                return window["mnsv2"](a,b,c);
+            },
+            args: data
+
+        }).then(res => res?.[0]?.result as any);
+    });
+
+    onMessage('download', ({ data }) => {
+        return browser.downloads.download(data);
+    });
+});

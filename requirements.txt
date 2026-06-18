@@ -1,0 +1,2 @@
+# Python dependency for writing amplification .xlsx workbooks.
+openpyxl>=3.1.2

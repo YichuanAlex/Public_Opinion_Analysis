@@ -1,0 +1,7 @@
+{
+  "apiKey": "sk-tE9Z2guipTXv2Dal57Bmaw",
+  "provider": "compatible",
+  "model": "kimi-k2.5-external",
+  "baseUrl": "https://llm-proxy.intra.xiaojukeji.com",
+  "sendImage": false
+}
