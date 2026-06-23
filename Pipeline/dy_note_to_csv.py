@@ -16,6 +16,8 @@ from pathlib import Path
 from typing import Iterable, Optional, Tuple
 
 import dy_common as dy
+from media_enrichment import enrich_flat_row
+from pipeline_paths import DY_ORIGIN_CSV, DY_SUMMARY_CSV
 
 
 PIPELINE_DIR = Path(__file__).resolve().parent
@@ -23,9 +25,9 @@ DEFAULT_URL = "https://www.douyin.com/"
 
 
 def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
-    output = Path(args.output) if args.output else PIPELINE_DIR / "dy_origin_data.csv"
+    output = Path(args.output) if args.output else DY_ORIGIN_CSV
     summary_output = None if args.no_summary else (
-        Path(args.summary_output) if args.summary_output else PIPELINE_DIR / "dy_note_10_fields.csv"
+        Path(args.summary_output) if args.summary_output else DY_SUMMARY_CSV
     )
 
     proc, page, user_dir, owns_user_dir = dy.launch_browser_page(args, "dy-note")
@@ -41,6 +43,8 @@ def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
 
         detail = dy.fetch_aweme_detail(page, aweme_id, timeout=args.http_timeout)
         flat = dy.build_flat_row(detail, args.url, aweme_id)
+        if not args.no_media_enrich:
+            flat = enrich_flat_row("dy", flat)
         dy.write_rows_csv(
             [flat],
             output,
@@ -73,6 +77,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("-o", "--output", help="Full-field CSV output path. Defaults to Pipeline/dy_origin_data.csv.")
     parser.add_argument("--summary-output", help="10-field CSV output path. Defaults to Pipeline/dy_note_10_fields.csv.")
     parser.add_argument("--no-summary", action="store_true", help="Do not write the 10-field summary CSV.")
+    parser.add_argument("--no-media-enrich", action="store_true", help="Skip local image OCR and video speech transcription.")
     dy.add_browser_args(parser)
     args = parser.parse_args(argv)
 

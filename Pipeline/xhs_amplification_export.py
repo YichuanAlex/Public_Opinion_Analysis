@@ -3,11 +3,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import importlib
 import json
 import math
 import os
 import re
+import site
 import subprocess
+import sys
 import time
 import tempfile
 import urllib.error
@@ -18,13 +21,15 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+from pipeline_paths import XHS_DATA_TABLE_CSV, XHS_HYPE_WORKBOOK
+
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 HYPE_ROOT = PROJECT_ROOT / "Hype_Something"
-DATA_TABLE = ROOT / "Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv"
+DATA_TABLE = XHS_DATA_TABLE_CSV
 HYPE_HISTORY = HYPE_ROOT / "training_data_cleaned.csv"
-HYPE_WORKBOOK = HYPE_ROOT / "2026_Didi_Xiaohongshu_Daily_Word-of-Mouth_Amplification.xlsx"
+HYPE_WORKBOOK = XHS_HYPE_WORKBOOK
 HYPE_LLM_CONFIG = HYPE_ROOT / "llm_config.json"
 
 MODEL_OPTIONS = [
@@ -511,10 +516,20 @@ def curl_post_json(endpoint: str, body: bytes, api_key: str, timeout: float) -> 
             [
                 "curl",
                 "-sS",
+                "--http1.1",
+                "--tlsv1.2",
+                "--no-keepalive",
+                "--retry",
+                "3",
+                "--retry-delay",
+                "2",
+                "--retry-max-time",
+                str(max(30, int(timeout) + 25)),
+                "--retry-all-errors",
                 "--connect-timeout",
-                "20",
+                "30",
                 "--max-time",
-                str(max(30, int(timeout))),
+                str(max(30, int(timeout) + 10)),
                 "-w",
                 "\n%{http_code}",
                 "--config",
@@ -556,14 +571,16 @@ def urllib_post_json(endpoint: str, body: bytes, api_key: str, timeout: float) -
 
 def post_json_with_fallback(endpoint: str, body: bytes, api_key: str, timeout: float) -> dict:
     try:
-        return urllib_post_json(endpoint, body, api_key, timeout)
+        return urllib_post_json(endpoint, body, api_key, min(timeout, 20))
     except LlmHttpError:
         raise
     except Exception as first_error:
         try:
             return curl_post_json(endpoint, body, api_key, timeout)
         except Exception as second_error:
-            raise RuntimeError(f"urllib失败: {first_error}; curl兜底失败: {second_error}") from second_error
+            first = re.sub(r"\s+", " ", str(first_error)).strip()
+            second = re.sub(r"\s+", " ", str(second_error)).strip()
+            raise RuntimeError(f"urllib失败: {first}; curl兜底失败: {second}") from second_error
 
 
 def parse_json_from_text(text: str) -> dict:
@@ -697,6 +714,17 @@ def ai_predict(candidate: Candidate, local_decision: Decision, config: dict[str,
     raise RuntimeError(last_error or "AI 判断失败")
 
 
+def ai_error_fallback(local_decision: Decision, error: Exception) -> Decision:
+    decision = copy(local_decision)
+    decision.method = "hype-fallback"
+    reason = re.sub(r"\s+", " ", str(error)).strip()
+    summary = decision.summary or ""
+    decision.summary = f"AI连接失败，使用Hype本地模型兜底。{summary}".strip()
+    if reason:
+        decision.reasons = [f"AI连接失败：{reason[:180]}"] + decision.reasons[:4]
+    return decision
+
+
 def decision_passes(decision: Decision, min_decision: str) -> bool:
     if min_decision == "test":
         return decision.decision in ("值得加热", "建议小额测试")
@@ -704,11 +732,47 @@ def decision_passes(decision: Decision, min_decision: str) -> bool:
 
 
 def require_openpyxl():
+    attempted_paths: list[str] = []
     try:
         import openpyxl  # type: ignore
         return openpyxl
-    except Exception as exc:
-        raise RuntimeError("缺少 openpyxl，无法写入 xlsx。请先运行：python3 -m pip install --user openpyxl") from exc
+    except Exception as first_exc:
+        candidate_paths: list[Path] = []
+        try:
+            candidate_paths.append(Path(site.getusersitepackages()))
+        except Exception:
+            pass
+        try:
+            candidate_paths.extend(Path(item) for item in site.getsitepackages())
+        except Exception:
+            pass
+        candidate_paths.extend(Path.home().glob("Library/Python/*/lib/python/site-packages"))
+        candidate_paths.extend(Path.home().glob(".local/lib/python*/site-packages"))
+
+        for candidate in candidate_paths:
+            if not candidate.exists():
+                continue
+            text = str(candidate)
+            attempted_paths.append(text)
+            if text not in sys.path:
+                sys.path.insert(0, text)
+            try:
+                importlib.invalidate_caches()
+                import openpyxl  # type: ignore
+                return openpyxl
+            except Exception:
+                continue
+
+        detail = (
+            "缺少 openpyxl，无法写入 xlsx。\n"
+            f"当前 Python: {sys.executable}\n"
+            f"Python 版本: {sys.version.split()[0]}\n"
+            f"首次 import 错误: {first_exc}\n"
+            f"已尝试 site-packages: {attempted_paths or '无'}\n"
+            "请用同一个 Python 安装："
+            f"{sys.executable} -m pip install --user openpyxl"
+        )
+        raise RuntimeError(detail) from first_exc
 
 
 def header_map(ws: Any) -> dict[str, int]:
@@ -812,13 +876,14 @@ def col_letter(col: Optional[int]) -> str:
 
 def append_to_workbook(workbook_path: Path, selected: list[tuple[Candidate, Decision]], dry_run: bool) -> dict[str, Any]:
     if not selected:
-        return {"appended": 0, "skippedExisting": 0, "sheets": {}}
+        return {"appended": 0, "skippedExisting": 0, "sheets": {}, "excelWriteDetails": []}
     openpyxl = require_openpyxl()
     wb = openpyxl.load_workbook(workbook_path)
     existing = existing_note_keys(wb)
     appended = 0
     skipped = 0
     sheets: dict[str, int] = {}
+    excel_details: list[str] = []
     for candidate, decision in selected:
         key = candidate.note_id or candidate.link
         if key in existing:
@@ -877,12 +942,39 @@ def append_to_workbook(workbook_path: Path, selected: list[tuple[Candidate, Deci
             )
         else:
             set_if_present(ws, mapping, row_index, "viral_level", "高潜" if decision.score >= 85 else "潜力")
+        if len(excel_details) < 20:
+            detail_fields = {
+                "sheet": ws.title,
+                "row": row_index,
+                "发布日期": candidate.publish_date.isoformat(),
+                "投放截止": end_value,
+                "状态": "待评估",
+                "作者昵称": candidate.author,
+                "链接": candidate.link,
+                "笔记ID": candidate.note_id,
+                "标题": candidate.title,
+                "投前互动量": candidate.interactions,
+                "一级分类": candidate.category1 or "待分类",
+                "二级分类": candidate.category2 or "待分类",
+                "备注": remark[:260],
+            }
+            excel_details.append(
+                f"{'预写入' if dry_run else '写入'}Excel："
+                + "；".join(f"{field}={clean(value)}" for field, value in detail_fields.items())
+            )
         existing.add(key)
         appended += 1
         sheets[ws.title] = sheets.get(ws.title, 0) + 1
     if not dry_run and appended:
         wb.save(workbook_path)
-    return {"appended": appended if not dry_run else 0, "wouldAppend": appended, "skippedExisting": skipped, "sheets": sheets}
+    return {
+        "appended": appended if not dry_run else 0,
+        "wouldAppend": appended,
+        "skippedExisting": skipped,
+        "sheets": sheets,
+        "excelWriteDetails": excel_details,
+        "excelWriteDetailsOmitted": max(0, appended - len(excel_details)),
+    }
 
 
 def preview_item(candidate: Candidate, decision: Decision) -> dict[str, Any]:
@@ -922,6 +1014,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     selected: list[tuple[Candidate, Decision]] = []
     judged = 0
+    ai_fallback_to_hype = 0
     errors: list[str] = []
     for index, candidate in enumerate(candidates, start=1):
         local_decision = predictor.predict(candidate)
@@ -930,8 +1023,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             try:
                 decision = ai_predict(candidate, local_decision, config, args.timeout, args.retries)
             except Exception as exc:
-                errors.append(f"{candidate.note_id}: {exc}")
-                continue
+                decision = ai_error_fallback(local_decision, exc)
+                ai_fallback_to_hype += 1
             if args.delay > 0 and index < len(candidates):
                 time.sleep(args.delay)
         elif args.method == "both":
@@ -942,8 +1035,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                     decision.decision = "暂不建议加热"
                     decision.summary = "AI入选但Hype本地模型未达入选门槛，已按交集策略剔除。"
             except Exception as exc:
-                errors.append(f"{candidate.note_id}: {exc}")
-                continue
+                decision = ai_error_fallback(local_decision, exc)
+                ai_fallback_to_hype += 1
             if args.delay > 0 and index < len(candidates):
                 time.sleep(args.delay)
         judged += 1
@@ -962,6 +1055,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "positiveCandidates": positive_candidates,
         "skippedNonPositive": candidate_stats["skippedNonPositive"],
         "judged": judged,
+        "aiFallbackToHype": ai_fallback_to_hype,
         "selected": len(selected),
         "dryRun": args.dry_run,
         **workbook_result,

@@ -1,2 +1,11 @@
 # Python dependency for writing amplification .xlsx workbooks.
 openpyxl>=3.1.2
+
+# macOS OCR adapter. Windows uses the bundled WeChatOCR directly and must not
+# fall back to these packages.
+pyobjc-framework-Vision>=10.0; sys_platform == "darwin"
+pyobjc-framework-Quartz>=10.0; sys_platform == "darwin"
+
+# Local speech-to-text for downloaded video/audio media.
+faster-whisper>=1.1.0
+huggingface-hub>=0.23.0

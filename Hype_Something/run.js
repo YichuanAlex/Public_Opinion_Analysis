@@ -48,7 +48,7 @@ const AUTO_TUNE = arg("--auto-tune", "false") === "true";
 const K_FOLDS = Number(arg("--k-folds", "0"));
 
 // LLM 超参数
-const API_KEY = arg("--api-key", process.env.OPENAI_API_KEY || "sk-tE9Z2guipTXv2Dal57Bmaw");
+const API_KEY = arg("--api-key", process.env.OPENAI_API_KEY || "sk-e_n5TZagIOiaopqztzd1TQ");
 const MODEL_ARG = arg("--model", "kimi-k2.5-external");
 const BASE_URL = arg("--base-url", process.env.OPENAI_BASE_URL || "https://llm-proxy.intra.xiaojukeji.com");
 const THRESHOLD = Number(arg("--threshold", "1.4"));

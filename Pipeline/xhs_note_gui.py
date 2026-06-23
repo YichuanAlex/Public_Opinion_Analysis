@@ -36,13 +36,15 @@ from tkinter import (
     Y,
 )
 
+from pipeline_paths import XHS_ORIGIN_CSV, XHS_SUMMARY_CSV
+
 
 PIPELINE_DIR = Path(__file__).resolve().parent
 NOTE_SCRIPT = PIPELINE_DIR / "xhs_note_to_csv.py"
 SEARCH_SCRIPT = PIPELINE_DIR / "xhs_search_to_csv.py"
 EXPORT_DIR = PIPELINE_DIR / "gui_exports"
-SEARCH_ORIGIN_CSV = PIPELINE_DIR / "origin_data.csv"
-SEARCH_TEN_CSV = PIPELINE_DIR / "xhs_note_10_fields.csv"
+SEARCH_ORIGIN_CSV = XHS_ORIGIN_CSV
+SEARCH_TEN_CSV = XHS_SUMMARY_CSV
 
 URL_RE = re.compile(r"https?://(?:www\.)?xiaohongshu\.com/[^\s，。！？,，）)】]+")
 NOTE_ID_RE = re.compile(r"/(?:discovery/item|explore|search_result)/([0-9a-zA-Z]{24})")
@@ -216,7 +218,7 @@ class XhsExporterGui:
         head = Frame(panel, bg=PANEL)
         head.pack(side=TOP, fill="x")
         Label(head, text="SEARCH INPUT", bg=PANEL, fg=MUTED, font=("Arial", 11, "bold")).pack(side=LEFT)
-        Label(head, text="输出到 Pipeline/origin_data.csv 与 xhs_note_10_fields.csv", bg=PANEL, fg=MUTED, font=("Arial", 11)).pack(side=RIGHT)
+        Label(head, text="输出到 Pipeline/xhs_origin_data.csv 与 xhs_note_10_fields.csv", bg=PANEL, fg=MUTED, font=("Arial", 11)).pack(side=RIGHT)
 
         row = Frame(panel, bg=PANEL)
         row.pack(side=TOP, fill="x", pady=(14, 0))

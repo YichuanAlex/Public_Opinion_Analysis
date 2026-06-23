@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import Any
 
 import xhs_amplification_export as base
+from pipeline_paths import DY_DATA_TABLE_CSV, DY_HYPE_WORKBOOK
 
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
 HYPE_ROOT = PROJECT_ROOT / "Hype_Something"
-DATA_TABLE = ROOT / "dy_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv"
-HYPE_WORKBOOK = HYPE_ROOT / "2026_Didi_Douyin_Daily_Word-of-Mouth_Amplification.xlsx"
+DATA_TABLE = DY_DATA_TABLE_CSV
+HYPE_WORKBOOK = DY_HYPE_WORKBOOK
 
 DY_MONTH_NAMES = {
     1: ["1月", "一月"],

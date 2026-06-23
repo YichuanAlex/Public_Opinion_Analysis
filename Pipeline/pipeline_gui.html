@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>多平台舆情 Pipeline 导出工具</title>
+    <link rel="stylesheet" href="/hype/styles.css" />
+    <link rel="stylesheet" href="/pipeline_gui.css" />
+  </head>
+  <body>
+    <div class="app-shell xhs-shell">
+      <aside class="side-panel xhs-side" aria-label="关键词预设与导出设置">
+        <div class="brand-row">
+          <div class="brand-mark" id="brandMark" aria-hidden="true">R</div>
+          <div>
+            <h1 id="brandTitle">Rednote Export</h1>
+            <p>Public Opinion Pipeline</p>
+          </div>
+        </div>
+        <div class="platform-switch" aria-label="舆情分析平台切换">
+          <button class="platform-option is-active" type="button" data-platform="xhs">小红书</button>
+          <button class="platform-option" type="button" data-platform="dy">抖音</button>
+        </div>
+
+        <section class="import-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Search Presets</p>
+              <h2>关键词选项</h2>
+            </div>
+            <span class="status-dot ready" id="presetCount">20 个</span>
+          </div>
+          <div class="keyword-grid" id="keywordGrid"></div>
+          <p class="field-hint">点击关键词只填入「关键词批量数目查询」，不会自动开始导出。</p>
+        </section>
+
+        <section class="settings-panel">
+          <div class="section-title">抓取设置</div>
+          <label class="control-row">
+            <span>最多笔记</span>
+            <input id="maxNotes" type="number" min="0" step="1" value="0" />
+          </label>
+          <p class="field-hint">0 表示不限制，只抓当前保守滚动能加载到的结果。</p>
+          <label class="control-row">
+            <span>滚动轮次</span>
+            <input id="scrollRounds" type="number" min="1" step="1" value="10" />
+          </label>
+          <button class="secondary-button full" id="openDirButton" type="button">打开导出目录</button>
+        </section>
+
+        <section class="settings-panel">
+          <div class="section-title">AI 填写</div>
+          <label class="control-row ai-control-row">
+            <span>模型</span>
+            <select id="aiModelSelect" class="force-light-input">
+              <option value="All Named Models">All Named Models</option>
+              <option value="All Internal Models">All Internal Models</option>
+              <option value="kimi-k2.5-external" selected>kimi-k2.5-external</option>
+              <option value="minimax-m2.5-external">minimax-m2.5-external</option>
+              <option value="glm-5.1-external">glm-5.1-external</option>
+              <option value="glm-5-external">glm-5-external</option>
+              <option value="glm-5-internal">glm-5-internal</option>
+              <option value="glm-5.1-internal">glm-5.1-internal</option>
+            </select>
+          </label>
+          <label class="control-row ai-control-row">
+            <span>最多行</span>
+            <input id="aiFillLimit" type="number" min="0" step="1" value="0" />
+          </label>
+          <label class="control-row ai-control-row">
+            <span>并发数</span>
+            <input id="aiFillConcurrency" type="number" min="1" max="8" step="1" value="3" />
+          </label>
+          <p class="field-hint">0 表示填充所有仍为空的 AI 字段；会先回填笔记ID、互动量和渠道类型。</p>
+          <button class="primary-button full" id="aiFillButton" type="button">AI填写总表</button>
+          <button class="secondary-button full" id="aiFillAllButton" type="button">双平台并行AI填写</button>
+          <button class="secondary-button full" id="backfillOnlyButton" type="button">只回填ID/互动量</button>
+          <button class="secondary-button full" id="backfillAllButton" type="button">双平台并行只回填</button>
+        </section>
+
+        <section class="settings-panel">
+          <div class="section-title">口碑加热候选</div>
+          <div class="date-range-grid">
+            <label class="compact-label">
+              <span>开始日期</span>
+              <input id="ampStartDate" class="force-light-input" type="date" />
+            </label>
+            <label class="compact-label">
+              <span>结束日期</span>
+              <input id="ampEndDate" class="force-light-input" type="date" />
+            </label>
+          </div>
+          <label class="control-row ai-control-row">
+            <span>最多判断</span>
+            <input id="ampLimit" type="number" min="0" step="1" value="30" />
+          </label>
+          <label class="control-row ai-control-row">
+            <span>入选门槛</span>
+            <select id="ampMinDecision" class="force-light-input">
+              <option value="worth" selected>只写入“值得加热”</option>
+              <option value="test">含“建议小额测试”</option>
+            </select>
+          </label>
+          <label class="checkbox-row">
+            <input id="ampDryRun" type="checkbox" />
+            <span>只预览，不写入 Excel</span>
+          </label>
+          <button class="primary-button full" id="ampHypeButton" type="button">Hype模型写入Excel</button>
+          <button class="secondary-button full" id="ampAiButton" type="button">AI判断写入Excel</button>
+          <button class="secondary-button full" id="openHypeButton" type="button">打开Hype软件界面</button>
+          <p class="field-hint" id="ampPathHint">
+            只允许 <code>正负向=正向</code> 的笔记进入加热判断；按发布时间筛选总表，写入
+            <code>Hype_Something/2026_Didi_Xiaohongshu_Daily_Word-of-Mouth_Amplification.xlsx</code>
+            对应月份 sheet。
+          </p>
+        </section>
+
+        <section class="model-card">
+          <div class="section-title">状态</div>
+          <p class="status-message" id="statusMessage">READY · 选择一种操作开始追加导出。</p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="top-bar">
+          <div>
+            <p class="eyebrow">Export Workspace</p>
+            <h2>Pipeline 总表追加工作台</h2>
+          </div>
+          <div class="trained-pill" id="runPill">READY</div>
+        </header>
+
+        <section class="predict-layout xhs-layout">
+          <section class="predict-form">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Operation 1</p>
+                <h2>单帖子单查询</h2>
+              </div>
+            </div>
+
+            <label class="textarea-label" for="noteInput">
+              <span>帖子链接或完整分享文案</span>
+              <textarea
+                id="noteInput"
+                class="force-light-input"
+                spellcheck="false"
+                placeholder="可键盘输入，也可粘贴整段小红书分享文案。"
+              ></textarea>
+            </label>
+
+            <div class="button-row">
+              <button class="primary-button" id="noteButton" type="button">单帖子单查询</button>
+              <button class="secondary-button" id="pasteNoteButton" type="button">粘贴板帖子查询</button>
+            </div>
+
+            <div class="button-row">
+              <button class="secondary-button comment-action" id="commentButton" type="button">爬取文本框评论</button>
+              <button class="secondary-button comment-action" id="pasteCommentButton" type="button">粘贴板评论爬取</button>
+            </div>
+
+            <div class="button-row clean-action-row">
+              <button class="secondary-button clean-action" id="cleanCurrentButton" type="button">清洗当前平台总表</button>
+              <button class="secondary-button clean-action" id="cleanAllButton" type="button">清洗双平台总表</button>
+            </div>
+
+            <p class="field-hint" id="appendPathHint">
+              全量字段追加到 <code>Pipeline/xhs_origin_data.csv</code>，10 个监控字段追加到
+              <code>Pipeline/xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv</code>。
+              评论数据追加到 <code>Pipeline/xhs_comments.csv</code>。
+            </p>
+          </section>
+
+          <section class="predict-form">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Operation 2</p>
+                <h2>关键词批量数目查询</h2>
+              </div>
+            </div>
+
+            <label class="textarea-label" for="keywordInput">
+              <span>关键词输入框</span>
+              <input
+                id="keywordInput"
+                class="force-light-input"
+                type="text"
+                value="滴滴打车"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="输入关键词，例如：滴滴打车"
+              />
+            </label>
+
+            <div class="search-filter-panel" aria-label="关键词搜索筛选">
+              <div class="filter-group" data-filter-group="sortBy">
+                <p>排序依据</p>
+                <div class="filter-options">
+                  <button class="filter-option is-active" type="button" data-value="综合">综合</button>
+                  <button class="filter-option" type="button" data-value="最新">最新</button>
+                  <button class="filter-option" type="button" data-value="最多点赞">最多点赞</button>
+                  <button class="filter-option" type="button" data-value="最多评论">最多评论</button>
+                  <button class="filter-option" type="button" data-value="最多收藏">最多收藏</button>
+                </div>
+              </div>
+
+              <div class="filter-group" data-filter-group="noteType">
+                <p>笔记类型</p>
+                <div class="filter-options">
+                  <button class="filter-option is-active" type="button" data-value="不限">不限</button>
+                  <button class="filter-option" type="button" data-value="视频">视频</button>
+                  <button class="filter-option" type="button" data-value="图文">图文</button>
+                </div>
+              </div>
+
+              <div class="filter-group" data-filter-group="publishTime">
+                <p>发布时间</p>
+                <div class="filter-options">
+                  <button class="filter-option is-active" type="button" data-value="不限">不限</button>
+                  <button class="filter-option" type="button" data-value="一天内">一天内</button>
+                  <button class="filter-option" type="button" data-value="一周内">一周内</button>
+                  <button class="filter-option" type="button" data-value="半年内">半年内</button>
+                </div>
+              </div>
+
+              <div class="filter-group" data-filter-group="searchScope">
+                <p>搜索范围</p>
+                <div class="filter-options">
+                  <button class="filter-option is-active" type="button" data-value="不限">不限</button>
+                  <button class="filter-option" type="button" data-value="已看过">已看过</button>
+                  <button class="filter-option" type="button" data-value="未看过">未看过</button>
+                  <button class="filter-option" type="button" data-value="已关注">已关注</button>
+                </div>
+              </div>
+
+              <div class="filter-group" data-filter-group="location">
+                <p>位置距离</p>
+                <div class="filter-options">
+                  <button class="filter-option is-active" type="button" data-value="不限">不限</button>
+                  <button class="filter-option" type="button" data-value="同城">同城</button>
+                  <button class="filter-option" type="button" data-value="附近">附近</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button class="primary-button" id="searchButton" type="button">导出当前关键词</button>
+              <button class="secondary-button" id="searchAllButton" type="button">双平台并行导出关键词</button>
+            </div>
+
+            <p class="field-hint" id="searchPathHint">
+              使用左侧「最多笔记」控制批量条数，0 表示不限制当前保守滚动可加载结果。
+              关键词搜索会使用可见 Chrome 慢速加载；所有结果同样追加到两张 Pipeline 总表。
+            </p>
+          </section>
+        </section>
+
+        <section class="operation-strip" aria-label="当前支持的操作类型">
+          <div>
+            <span>1</span>
+            <strong>单帖子单查询</strong>
+          </div>
+          <div>
+            <span>2</span>
+            <strong>关键词批量数目查询</strong>
+          </div>
+          <div>
+            <span>3</span>
+            <strong>粘贴板帖子查询</strong>
+          </div>
+        </section>
+
+        <section class="decision-card xhs-result-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Run Log</p>
+              <h2>执行结果</h2>
+            </div>
+          </div>
+          <pre id="logOutput">等待操作。</pre>
+        </section>
+      </main>
+    </div>
+
+    <script src="/pipeline_gui.js"></script>
+  </body>
+</html>

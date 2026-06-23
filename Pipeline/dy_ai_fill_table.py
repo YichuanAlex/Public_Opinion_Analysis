@@ -7,12 +7,13 @@ from pathlib import Path
 from typing import Any
 
 import xhs_ai_fill_table as base
+from pipeline_paths import DY_DATA_TABLE_CSV, DY_ORIGIN_CSV
 
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent
-DATA_TABLE = ROOT / "dy_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv"
-ORIGIN_DATA = ROOT / "dy_origin_data.csv"
+DATA_TABLE = DY_DATA_TABLE_CSV
+ORIGIN_DATA = DY_ORIGIN_CSV
 
 base.DATA_TABLE = DATA_TABLE
 base.ORIGIN_DATA = ORIGIN_DATA

@@ -24,6 +24,8 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import dy_common as dy
+from media_enrichment import enrich_flat_row
+from pipeline_paths import DY_ORIGIN_CSV, DY_SUMMARY_CSV
 
 
 PIPELINE_DIR = Path(__file__).resolve().parent
@@ -281,6 +283,7 @@ def build_origin_rows(
     filters: Dict[str, str],
     request_interval: float,
     http_timeout: float,
+    media_enrich: bool = False,
 ) -> List[OrderedDict]:
     rows: List[OrderedDict] = []
     for index, item in enumerate(items, start=1):
@@ -290,6 +293,8 @@ def build_origin_rows(
         try:
             detail = dy.fetch_aweme_detail(page, aweme_id, http_timeout)
             flat = dy.build_flat_row(detail, item.get("href", ""), aweme_id)
+            if media_enrich:
+                flat = enrich_flat_row("dy", flat)
         except Exception as exc:
             flat = OrderedDict()
             flat["platform"] = "douyin"
@@ -320,8 +325,8 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
     keyword_or_url = args.search_url or args.keyword
     search_urls = candidate_search_urls(keyword_or_url)
     keyword = args.keyword
-    output = Path(args.output) if args.output else PIPELINE_DIR / "dy_origin_data.csv"
-    summary_output = Path(args.summary_output) if args.summary_output else PIPELINE_DIR / "dy_note_10_fields.csv"
+    output = Path(args.output) if args.output else DY_ORIGIN_CSV
+    summary_output = Path(args.summary_output) if args.summary_output else DY_SUMMARY_CSV
     filters = {
         "sort_by": normalize_choice(args.sort_by, SORT_OPTIONS, "综合"),
         "note_type": normalize_choice(args.note_type, NOTE_TYPE_OPTIONS, "不限"),
@@ -378,6 +383,7 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
             filters,
             request_interval=args.request_interval,
             http_timeout=args.http_timeout,
+            media_enrich=args.media_enrich,
         )
         rows = apply_filters_and_sort(rows, filters, args.max_notes)
         if not rows:
@@ -422,6 +428,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("--scroll-delay", type=float, default=2.8)
     parser.add_argument("--search-load-timeout", type=float, default=22.0)
     parser.add_argument("--request-interval", type=float, default=2.0)
+    parser.add_argument("--media-enrich", action="store_true", help="Download each exported video's media for local OCR/ASR. Disabled by default for batch safety.")
     dy.add_browser_args(parser)
     args = parser.parse_args(argv)
 

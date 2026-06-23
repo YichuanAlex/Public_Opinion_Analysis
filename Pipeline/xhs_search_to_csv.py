@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import xhs_note_to_csv as note_exporter
+from pipeline_paths import XHS_ORIGIN_CSV, XHS_SUMMARY_CSV
 
 
 PRESET_KEYWORDS = [
@@ -393,6 +394,7 @@ def build_multi_origin_rows(
     filters: Dict[str, str],
     request_interval: float,
     http_timeout: float,
+    media_enrich: bool = False,
 ) -> List[OrderedDict]:
     rows: List[OrderedDict] = []
 
@@ -420,8 +422,15 @@ def build_multi_origin_rows(
 
         try:
             body = note_exporter.build_body(item["id"], item.get("source", ""), item["token"])
-            data = note_exporter.post_feed(page, state, body, timeout=http_timeout)
+            try:
+                data = note_exporter.post_feed(page, state, body, timeout=http_timeout)
+            except Exception as first_exc:
+                data = post_feed_via_browser_fetch(page, state, body, timeout=http_timeout)
+                flat["detail_fetch_fallback"] = "browser_fetch"
+                flat["detail_fetch_first_error"] = str(first_exc)
             detail = note_exporter.build_flat_row(data, item["href"], item["id"], item.get("source", ""))
+            if media_enrich:
+                detail = note_exporter.enrich_flat_row("xhs", detail)
             for key, value in detail.items():
                 flat[key] = value
         except Exception as exc:
@@ -431,6 +440,71 @@ def build_multi_origin_rows(
         rows.append(flat)
 
     return rows
+
+
+def post_feed_via_browser_fetch(
+    page: note_exporter.CdpClient,
+    state: Dict[str, Any],
+    body: OrderedDict,
+    timeout: float,
+) -> Dict[str, Any]:
+    body_json = json.dumps(body, ensure_ascii=False, separators=(",", ":"))
+    headers = {
+        "Accept": "application/json, text/plain, */*",
+        "Content-Type": "application/json;charset=UTF-8",
+        "x-s": note_exporter.build_xs(page, state, body_json),
+        "x-t": str(int(time.time() * 1000)),
+        "x-s-common": note_exporter.build_xs_common(state),
+        "x-xray-traceid": note_exporter.trace_id(),
+        "x-b3-traceid": note_exporter.b3_trace_id(),
+    }
+    payload = {
+        "url": note_exporter.API_BASE + note_exporter.API_PATH,
+        "headers": headers,
+        "body": body_json,
+        "timeoutMs": int(max(5.0, timeout) * 1000),
+    }
+    expression = f"""
+(async () => {{
+  const payload = {json.dumps(payload, ensure_ascii=False)};
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort('timeout'), payload.timeoutMs);
+  try {{
+    const response = await fetch(payload.url, {{
+      method: 'POST',
+      credentials: 'include',
+      headers: payload.headers,
+      body: payload.body,
+      signal: controller.signal
+    }});
+    const text = await response.text();
+    let data = null;
+    try {{
+      data = JSON.parse(text);
+    }} catch (error) {{
+      return {{ ok: false, status: response.status, text: text.slice(0, 1000), parseError: String(error) }};
+    }}
+    return {{ ok: response.ok, status: response.status, data, text: text.slice(0, 1000) }};
+  }} catch (error) {{
+    return {{ ok: false, status: 0, error: String(error) }};
+  }} finally {{
+    clearTimeout(timer);
+  }}
+}})()
+"""
+    result = page.evaluate(expression, await_promise=True) or {}
+    if not result.get("ok"):
+        message = result.get("error") or result.get("text") or result.get("parseError") or "browser fetch failed"
+        raise RuntimeError(f"Browser fetch HTTP {result.get('status')}: {message}")
+    response_payload = result.get("data")
+    if isinstance(response_payload, dict) and response_payload.get("success") is False:
+        message = response_payload.get("msg") or "Xiaohongshu API returned success=false"
+        if "登录" in message:
+            message += "。请确认浏览器已登录小红书后重试。"
+        raise RuntimeError(message)
+    if isinstance(response_payload, dict) and "data" in response_payload:
+        return response_payload["data"]
+    return response_payload if isinstance(response_payload, dict) else {"data": response_payload}
 
 
 def normalize_choice(value: str, allowed: List[str], default: str) -> str:
@@ -461,6 +535,8 @@ def matches_note_type(row: Dict[str, Any], note_type: str) -> bool:
     if note_type == "不限":
         return True
     raw_type = str(note_exporter.pick(row, "items.0.note_card.type")).lower()
+    if not raw_type:
+        return True
     is_video = raw_type == "video"
     return is_video if note_type == "视频" else not is_video
 
@@ -473,7 +549,7 @@ def matches_publish_time(row: Dict[str, Any], publish_time: str) -> bool:
         return True
     timestamp = note_time_value(row)
     if not timestamp:
-        return False
+        return True
     return datetime.fromtimestamp(timestamp) >= datetime.now() - timedelta(days=days)
 
 
@@ -565,12 +641,17 @@ def write_ten_fields_csv(rows: List[Dict[str, Any]], output_path: Path) -> None:
         writer = csv.DictWriter(handle, fieldnames=out_fields)
         writer.writeheader()
         for row in rows:
+            body = note_exporter.append_media_text(
+                note_exporter.pick(row, "items.0.note_card.desc", "preview_text"),
+                str(note_exporter.pick(row, "media_enrichment.image_ocr_text")),
+                str(note_exporter.pick(row, "media_enrichment.video_transcript")),
+            )
             writer.writerow({
                 "笔记ID": note_exporter.pick(row, "note_id", "items.0.note_card.note_id", "items.0.id"),
                 "博主昵称": note_exporter.pick(row, "items.0.note_card.user.nickname", "preview_author"),
                 "笔记链接": note_exporter.pick(row, "source_url"),
                 "笔记标题": note_exporter.pick(row, "items.0.note_card.title", "preview_title"),
-                "笔记内容": note_exporter.pick(row, "items.0.note_card.desc"),
+                "笔记内容": body,
                 "点赞量": note_exporter.pick(row, "items.0.note_card.interact_info.liked_count"),
                 "收藏量": note_exporter.pick(row, "items.0.note_card.interact_info.collected_count"),
                 "评论量": note_exporter.pick(row, "items.0.note_card.interact_info.comment_count"),
@@ -584,8 +665,8 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
     search_urls = candidate_search_urls(keyword_or_url)
     search_url = search_urls[0]
     keyword = args.keyword
-    output = Path(args.output) if args.output else PIPELINE_DIR / "origin_data.csv"
-    summary_output = Path(args.summary_output) if args.summary_output else PIPELINE_DIR / "xhs_note_10_fields.csv"
+    output = Path(args.output) if args.output else XHS_ORIGIN_CSV
+    summary_output = Path(args.summary_output) if args.summary_output else XHS_SUMMARY_CSV
     filters = {
         "sort_by": normalize_choice(args.sort_by, SORT_OPTIONS, "综合"),
         "note_type": normalize_choice(args.note_type, NOTE_TYPE_OPTIONS, "不限"),
@@ -672,10 +753,17 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
             filters,
             request_interval=args.request_interval,
             http_timeout=args.http_timeout,
+            media_enrich=args.media_enrich,
         )
         rows = apply_row_filters_and_sort(rows, filters, args.max_notes)
         if not rows:
             raise RuntimeError("搜索结果已加载，但筛选条件下没有可导出的笔记。")
+        detail_error_count = sum(1 for row in rows if row.get("fetch_error"))
+        if detail_error_count:
+            print(
+                f"WARNING: {detail_error_count} notes exported with preview fields only because detail API failed.",
+                flush=True,
+            )
         write_origin_csv(rows, output)
         write_ten_fields_csv(rows, summary_output)
         return output, summary_output, len(rows)
@@ -696,7 +784,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Export Xiaohongshu search-result notes to CSV.")
     parser.add_argument("keyword", nargs="?", default=DEFAULT_KEYWORD, help="Search keyword. Defaults to 滴滴出行.")
     parser.add_argument("--search-url", help="Full Xiaohongshu search-result URL. Overrides keyword URL building.")
-    parser.add_argument("-o", "--output", help="Full-field CSV path. Defaults to Pipeline/origin_data.csv.")
+    parser.add_argument("-o", "--output", help="Full-field CSV path. Defaults to Pipeline/xhs_origin_data.csv.")
     parser.add_argument("--summary-output", help="10-field CSV path. Defaults to Pipeline/xhs_note_10_fields.csv.")
     parser.add_argument("--max-notes", type=int, default=0, help="Maximum notes to fetch. 0 means no note cap.")
     parser.add_argument("--sort-by", choices=SORT_OPTIONS, default="综合", help="搜索排序：综合/最新/最多点赞/最多评论/最多收藏。")
@@ -709,6 +797,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("--scroll-delay", type=float, default=2.5, help="Seconds to wait between scrolls.")
     parser.add_argument("--search-load-timeout", type=float, default=18.0, help="Seconds to wait for the search page to render cards.")
     parser.add_argument("--request-interval", type=float, default=2.0, help="Seconds to wait between detail requests.")
+    parser.add_argument("--media-enrich", action="store_true", help="Download each exported note's media for local OCR/ASR. Disabled by default for batch safety.")
     parser.add_argument("--chrome", help="Chrome/Chromium executable path.")
     parser.add_argument("--user-data-dir", help="Chrome user-data directory.")
     parser.add_argument("--use-default-profile", action="store_true", default=True, help="Clone default Chrome profile.")

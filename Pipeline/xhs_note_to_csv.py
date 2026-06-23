@@ -35,6 +35,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+from media_enrichment import append_media_text, enrich_flat_row
+from pipeline_paths import XHS_ORIGIN_CSV, XHS_SUMMARY_CSV
+
 
 DEFAULT_URL = (
     "https://www.xiaohongshu.com/discovery/item/"
@@ -669,6 +672,12 @@ def export_ten_fields_csv(flat: Dict[str, Any], output_path: Path) -> None:
         "发布时间",
     ]
 
+    body = append_media_text(
+        pick(flat, "items.0.note_card.desc"),
+        str(pick(flat, "media_enrichment.image_ocr_text")),
+        str(pick(flat, "media_enrichment.video_transcript")),
+    )
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=out_fields)
@@ -678,7 +687,7 @@ def export_ten_fields_csv(flat: Dict[str, Any], output_path: Path) -> None:
             "博主昵称": pick(flat, "items.0.note_card.user.nickname"),
             "笔记链接": pick(flat, "source_url"),
             "笔记标题": pick(flat, "items.0.note_card.title"),
-            "笔记内容": pick(flat, "items.0.note_card.desc"),
+            "笔记内容": body,
             "点赞量": pick(flat, "items.0.note_card.interact_info.liked_count"),
             "收藏量": pick(flat, "items.0.note_card.interact_info.collected_count"),
             "评论量": pick(flat, "items.0.note_card.interact_info.comment_count"),
@@ -707,9 +716,9 @@ def wait_for_login_cookie(page: CdpClient, initial_state: Dict[str, Any], timeou
 
 def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
     note_id, xsec_source, xsec_token = parse_note_url(args.url)
-    output = Path(args.output) if args.output else Path(__file__).with_name("origin_data.csv")
+    output = Path(args.output) if args.output else XHS_ORIGIN_CSV
     summary_output = None if args.no_summary else (
-        Path(args.summary_output) if args.summary_output else Path(__file__).with_name("xhs_note_10_fields.csv")
+        Path(args.summary_output) if args.summary_output else XHS_SUMMARY_CSV
     )
 
     chrome_path = find_chrome(args.chrome)
@@ -745,6 +754,8 @@ def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
         body = build_body(note_id, xsec_source, xsec_token)
         data = post_feed(page, state, body, timeout=args.http_timeout)
         flat = build_flat_row(data, args.url, note_id, xsec_source)
+        if not args.no_media_enrich:
+            flat = enrich_flat_row("xhs", flat)
         export_csv(flat, output)
         if summary_output is not None:
             export_ten_fields_csv(flat, summary_output)
@@ -765,12 +776,13 @@ def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
 def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Export Xiaohongshu note API fields to CSV.")
     parser.add_argument("url", nargs="?", default=DEFAULT_URL, help="Xiaohongshu note/share URL.")
-    parser.add_argument("-o", "--output", help="Full-field CSV output path. Defaults to Pipeline/origin_data.csv.")
+    parser.add_argument("-o", "--output", help="Full-field CSV output path. Defaults to Pipeline/xhs_origin_data.csv.")
     parser.add_argument(
         "--summary-output",
         help="10-field CSV output path. Defaults to Pipeline/xhs_note_10_fields.csv.",
     )
     parser.add_argument("--no-summary", action="store_true", help="Do not write the 10-field summary CSV.")
+    parser.add_argument("--no-media-enrich", action="store_true", help="Skip local image OCR and video speech transcription.")
     parser.add_argument("--chrome", help="Chrome/Chromium executable path.")
     parser.add_argument("--user-data-dir", help="Chrome user-data directory, useful if the API requires login cookies.")
     parser.add_argument(

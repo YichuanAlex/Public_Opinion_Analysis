@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import xhs_note_to_csv as browser
+from media_enrichment import append_media_text
 
 
 API_BASE = "https://www.douyin.com"
@@ -414,6 +415,11 @@ def summary_row(flat: Dict[str, Any]) -> OrderedDict:
     body = str(desc or "")
     if ocr and str(ocr).strip() not in body:
         body = (body + "\nOCR：" + str(ocr)).strip()
+    body = append_media_text(
+        body,
+        str(pick(flat, "media_enrichment.image_ocr_text")),
+        str(pick(flat, "media_enrichment.video_transcript")),
+    )
     aweme_id = pick(flat, "aweme_id", "note_id", "aweme_detail.aweme_id")
     out = OrderedDict()
     out["笔记ID"] = aweme_id
