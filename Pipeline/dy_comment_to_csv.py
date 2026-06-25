@@ -185,12 +185,13 @@ def run(args: argparse.Namespace) -> Tuple[Path, int]:
     output = Path(args.output) if args.output else Path(__file__).with_name("dy_comments.csv")
     proc, page, user_dir, owns_user_dir = dy.launch_browser_page(args, "dy-comment")
     try:
-        aweme_id = dy.parse_aweme_id_from_url(args.url)
-        landing_url = dy.canonical_aweme_url(aweme_id) if aweme_id else args.url
+        note_url = dy.extract_douyin_url(args.url)
+        aweme_id = dy.parse_aweme_id_from_url(note_url)
+        landing_url = dy.canonical_aweme_url(aweme_id) if aweme_id else note_url
         dy.navigate_and_wait(page, landing_url, timeout=args.browser_timeout, minimum_delay=2.0)
         aweme_id = aweme_id or dy.extract_aweme_id_from_page(page)
         if not aweme_id:
-            aweme_id = dy.ensure_aweme_id(page, args.url, args.browser_timeout)
+            aweme_id = dy.ensure_aweme_id(page, note_url, args.browser_timeout)
         rows = collect_comments(
             page,
             aweme_id,

@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import re
+import site
 import sys
 from pathlib import Path
 from typing import Iterable, Optional
@@ -20,6 +22,31 @@ MAC_VISION_LANGUAGES = ["zh-Hans", "zh-Hant", "en-US"]
 
 class OcrAdapterError(RuntimeError):
     pass
+
+
+def _ensure_user_site_packages() -> None:
+    version_tag = f"{sys.version_info.major}.{sys.version_info.minor}"
+
+    def compatible(candidate: Path) -> bool:
+        text = str(candidate).lower()
+        versions = re.findall(r"python[/\\]?(\d+\.\d+)", text)
+        return not versions or version_tag in versions
+
+    candidates: list[Path] = []
+    try:
+        candidates.append(Path(site.getusersitepackages()))
+    except Exception:
+        pass
+    try:
+        candidates.extend(Path(item) for item in site.getsitepackages())
+    except Exception:
+        pass
+    candidates.extend(Path.home().glob("Library/Python/*/lib/python/site-packages"))
+    candidates.extend(Path.home().glob(".local/lib/python*/site-packages"))
+    for candidate in candidates:
+        text = str(candidate)
+        if candidate.exists() and compatible(candidate) and text not in sys.path:
+            sys.path.insert(0, text)
 
 
 def _existing_image_path(image_path: str | Path) -> Path:
@@ -64,9 +91,15 @@ def _windows_wechat_ocr(image_path: Path) -> list[str]:
 
 def _macos_vision_ocr(image_path: Path, languages: Optional[list[str]] = None) -> list[str]:
     try:
-        import Vision  # type: ignore
-        import Quartz  # type: ignore  # noqa: F401 - imported to ensure image/URL bridging is available.
-        from Foundation import NSURL  # type: ignore
+        try:
+            import Vision  # type: ignore
+            import Quartz  # type: ignore  # noqa: F401 - imported to ensure image/URL bridging is available.
+            from Foundation import NSURL  # type: ignore
+        except Exception:
+            _ensure_user_site_packages()
+            import Vision  # type: ignore
+            import Quartz  # type: ignore  # noqa: F401 - imported to ensure image/URL bridging is available.
+            from Foundation import NSURL  # type: ignore
     except Exception as exc:
         raise OcrAdapterError(
             "macOS OCR uses Apple's native Vision framework through PyObjC. "

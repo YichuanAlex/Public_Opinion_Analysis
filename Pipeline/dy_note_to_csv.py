@@ -32,17 +32,18 @@ def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
 
     proc, page, user_dir, owns_user_dir = dy.launch_browser_page(args, "dy-note")
     try:
-        aweme_id = dy.parse_aweme_id_from_url(args.url)
-        landing_url = args.url
+        note_url = dy.extract_douyin_url(args.url)
+        aweme_id = dy.parse_aweme_id_from_url(note_url)
+        landing_url = note_url
         if aweme_id:
             landing_url = dy.canonical_aweme_url(aweme_id)
         dy.navigate_and_wait(page, landing_url, timeout=args.browser_timeout, minimum_delay=2.0)
         aweme_id = aweme_id or dy.extract_aweme_id_from_page(page)
         if not aweme_id:
-            aweme_id = dy.ensure_aweme_id(page, args.url, args.browser_timeout)
+            aweme_id = dy.ensure_aweme_id(page, note_url, args.browser_timeout)
 
         detail = dy.fetch_aweme_detail(page, aweme_id, timeout=args.http_timeout)
-        flat = dy.build_flat_row(detail, args.url, aweme_id)
+        flat = dy.build_flat_row(detail, note_url, aweme_id)
         if not args.no_media_enrich:
             flat = enrich_flat_row("dy", flat)
         dy.write_rows_csv(

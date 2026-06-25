@@ -1,5 +1,0 @@
-XHS GUI running at http://127.0.0.1:8765/
-[16/Jun/2026 18:33:11] "GET / HTTP/1.1" 200 -
-[16/Jun/2026 18:33:11] "GET /hype/styles.css HTTP/1.1" 200 -[16/Jun/2026 18:33:11] "GET /xhs_gui.css HTTP/1.1" 200 -
-
-[16/Jun/2026 18:33:11] "GET /xhs_gui.js HTTP/1.1" 200 -

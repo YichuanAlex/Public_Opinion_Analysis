@@ -50,8 +50,29 @@ class DouyinApiError(RuntimeError):
     pass
 
 
+DY_URL_RE = re.compile(
+    r"https?://(?:(?:www|v)\.)?(?:douyin\.com|iesdouyin\.com)/[^\s，。！？,，）)】\]]+"
+)
+
+
+def extract_douyin_url(value: str) -> str:
+    text = (
+        str(value or "")
+        .replace("&amp;", "&")
+        .replace("\\u002F", "/")
+        .replace("\\/", "/")
+        .replace("\\u003F", "?")
+        .replace("\\u003D", "=")
+        .replace("\\u0026", "&")
+    )
+    match = DY_URL_RE.search(text)
+    if match:
+        return match.group(0).rstrip("。；;，,）)】]")
+    return text.strip().rstrip("。；;，,）)】]")
+
+
 def parse_aweme_id_from_url(value: str) -> str:
-    text = str(value or "").strip()
+    text = extract_douyin_url(value)
     if not text:
         return ""
     decoded = urllib.parse.unquote(text)
@@ -243,10 +264,11 @@ def extract_aweme_id_from_page(page: browser.CdpClient) -> str:
 
 
 def ensure_aweme_id(page: browser.CdpClient, url: str, timeout: float) -> str:
-    aweme_id = parse_aweme_id_from_url(url)
+    landing_url = extract_douyin_url(url)
+    aweme_id = parse_aweme_id_from_url(landing_url)
     if aweme_id:
         return aweme_id
-    navigate_and_wait(page, url, timeout=timeout, minimum_delay=2.4)
+    navigate_and_wait(page, landing_url, timeout=timeout, minimum_delay=2.4)
     aweme_id = extract_aweme_id_from_page(page)
     if aweme_id:
         return aweme_id
@@ -464,7 +486,10 @@ def write_summary_csv(rows: List[Dict[str, Any]], output_path: Path) -> None:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         for row in rows:
-            writer.writerow(summary_row(row))
+            summary = summary_row(row)
+            if row.get("fetch_error") and not (summary.get("笔记标题") or summary.get("笔记内容")):
+                continue
+            writer.writerow(summary)
 
 
 def add_browser_args(parser: Any) -> None:

@@ -641,23 +641,10 @@ def write_ten_fields_csv(rows: List[Dict[str, Any]], output_path: Path) -> None:
         writer = csv.DictWriter(handle, fieldnames=out_fields)
         writer.writeheader()
         for row in rows:
-            body = note_exporter.append_media_text(
-                note_exporter.pick(row, "items.0.note_card.desc", "preview_text"),
-                str(note_exporter.pick(row, "media_enrichment.image_ocr_text")),
-                str(note_exporter.pick(row, "media_enrichment.video_transcript")),
-            )
-            writer.writerow({
-                "笔记ID": note_exporter.pick(row, "note_id", "items.0.note_card.note_id", "items.0.id"),
-                "博主昵称": note_exporter.pick(row, "items.0.note_card.user.nickname", "preview_author"),
-                "笔记链接": note_exporter.pick(row, "source_url"),
-                "笔记标题": note_exporter.pick(row, "items.0.note_card.title", "preview_title"),
-                "笔记内容": body,
-                "点赞量": note_exporter.pick(row, "items.0.note_card.interact_info.liked_count"),
-                "收藏量": note_exporter.pick(row, "items.0.note_card.interact_info.collected_count"),
-                "评论量": note_exporter.pick(row, "items.0.note_card.interact_info.comment_count"),
-                "分享量": note_exporter.pick(row, "items.0.note_card.interact_info.share_count"),
-                "发布时间": note_exporter.format_time(note_exporter.pick(row, "items.0.note_card.time")),
-            })
+            summary = note_exporter.xhs_summary_row(row)
+            if row.get("fetch_error") and not (summary.get("笔记标题") or summary.get("笔记内容")):
+                continue
+            writer.writerow(summary)
 
 
 def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:

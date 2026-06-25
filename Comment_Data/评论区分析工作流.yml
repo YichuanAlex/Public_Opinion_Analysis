@@ -1,0 +1,652 @@
+app:
+  description: 用于分析评论区情况的工作流
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 评论区分析工作流
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: package
+  value:
+    plugin_unique_identifier: profilechenyang/deepseek:0.0.2@f32d38146ce269ce47e94ab269d4b175a6b31a3395ed3949ce87601822144008
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: qiangxinglin/excel_tools:0.0.5@81147a24fa4dc871759a759bda9cf024efdba3c525815e40daba74bd7ee89c4b
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 50
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: tool
+      id: 1776326271838-source-1776326685492-target
+      source: '1776326271838'
+      sourceHandle: source
+      target: '1776326685492'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: code
+      id: 1776326685492-source-1776326611571-target
+      source: '1776326685492'
+      sourceHandle: source
+      target: '1776326611571'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1776326611571-source-1776327591765-target
+      source: '1776326611571'
+      sourceHandle: source
+      target: '1776327591765'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1776327591765-source-1777001205217-target
+      source: '1776327591765'
+      sourceHandle: source
+      target: '1777001205217'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1777001205217-source-1777001246151-target
+      source: '1777001205217'
+      sourceHandle: source
+      target: '1777001246151'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: target_keyword
+          max_length: 48
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: target_keyword
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - document
+          allowed_file_upload_methods:
+          - local_file
+          default: ''
+          hint: ''
+          label: user_input_file
+          max_length: 48
+          options: []
+          placeholder: ''
+          required: true
+          type: file
+          variable: user_input_file
+      height: 135
+      id: '1776326271838'
+      position:
+        x: 31.956816437027726
+        y: 367.0483445777227
+      positionAbsolute:
+        x: 31.956816437027726
+        y: 367.0483445777227
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\nimport re\nimport random\nimport urllib.parse\n\nPOSITIVE_WORDS\
+          \ = {\n    # 基础正面\n    \"好\",\"棒\",\"赞\",\"优\",\"美\",\"香\",\"强\",\"牛\",\"\
+          妙\",\"佳\",\"爽\",\"赢\",\"稳\",\"准\",\n    # 常用正面词\n    \"好用\",\"方便\",\"快捷\"\
+          ,\"安全\",\"准时\",\"贴心\",\"舒适\",\"满意\",\"推荐\",\"感谢\",\n    \"喜欢\",\"不错\",\"\
+          厉害\",\"专业\",\"靠谱\",\"实惠\",\"划算\",\"高效\",\"友好\",\"热情\",\n    \"好评\",\"给力\"\
+          ,\"完美\",\"超棒\",\"很好\",\"非常好\",\"太好了\",\"开心\",\"愉快\",\n    \"顺利\",\"省心\"\
+          ,\"放心\",\"暖心\",\"用心\",\"细心\",\"耐心\",\"称心\",\"超值\",\"点赞\",\n    \"值得\",\"\
+          性价比\",\"蛮好\",\"挺好\",\"相当好\",\"真的好\",\"果然好\",\"确实好\",\n    \"强推\",\"必推\"\
+          ,\"安利\",\"无敌\",\"绝了\",\"绝绝子\",\"太绝了\",\"爱了\",\"爱了爱了\",\n    \"好棒\",\"好赞\"\
+          ,\"好香\",\"好爽\",\"好强\",\"好牛\",\"超好\",\"超赞\",\"超棒\",\"超爽\",\n    \"yyds\"\
+          ,\"YYDS\",\"nice\",\"哇\",\"哇哦\",\"哇塞\",\"厉害了\",\"牛啊\",\"牛逼\",\"nb\",\n \
+          \   \"感动\",\"暖\",\"温暖\",\"贴心\",\"走心\",\"用心\",\"舒心\",\"放心\",\"开心\",\"欢喜\"\
+          ,\n    \"划算\",\"合适\",\"满足\",\"惊喜\",\"期待\",\"支持\",\"鼓励\",\"认可\",\"信任\",\"\
+          信赖\",\n    \"好服务\",\"好态度\",\"好体验\",\"好司机\",\"好快\",\"好准\",\"好便宜\",\"好方便\"\
+          ,\n    \"没问题\",\"完全没问题\",\"相当不错\",\"还挺好\",\"还不错\",\"算不错\",\"挺不错\",\n   \
+          \ \"舒服\",\"顺畅\",\"流畅\",\"丝滑\",\"秒到\",\"飞快\",\"超快\",\"很快\",\"挺快\",\"蛮快\"\n\
+          }\n\nNEGATIVE_WORDS = {\n    # 基础负面\n    \"差\",\"烂\",\"坏\",\"慢\",\"贵\",\"\
+          坑\",\"骗\",\"假\",\"臭\",\"糟\",\"垃圾\",\"烦\",\"气\",\n    # 常用负面词\n    \"难用\"\
+          ,\"麻烦\",\"不稳\",\"不准\",\"不满\",\"投诉\",\"退款\",\"骚扰\",\"欺骗\",\"虚假\",\n    \"\
+          不靠谱\",\"太贵\",\"太慢\",\"太差\",\"很差\",\"非常差\",\"极差\",\"难受\",\"烦躁\",\n    \"\
+          愤怒\",\"生气\",\"郁闷\",\"无语\",\"崩溃\",\"绝望\",\"恶心\",\"恶劣\",\"故障\",\n    \"不好\"\
+          ,\"不行\",\"不合理\",\"不专业\",\"不负责\",\"没服务\",\"没态度\",\n    \"太坑\",\"真坑\",\"被坑\"\
+          ,\"踩坑\",\"宰客\",\"黑心\",\"坑钱\",\"浪费\",\"后悔\",\"踩雷\",\n    \"差评\",\"恶评\",\"\
+          投诉\",\"举报\",\"退钱\",\"赔偿\",\"维权\",\"拉黑\",\"卸载\",\"不用了\",\n    \"失望\",\"大失所望\"\
+          ,\"非常失望\",\"超级失望\",\"很失望\",\"太失望\",\n    \"离谱\",\"太离谱\",\"真离谱\",\"也太离谱\"\
+          ,\"不像话\",\"说不过去\",\"没法忍\",\n    \"绕路\",\"乱收费\",\"多收\",\"乱扣\",\"扣费\",\"乱扣费\"\
+          ,\"自动扣\",\"强制扣\",\n    \"等太久\",\"等好久\",\"等了很久\",\"迟到\",\"超时\",\"没来\",\"\
+          放鸽子\",\"爽约\",\n    \"态度差\",\"态度恶劣\",\"服务差\",\"服务烂\",\"体验差\",\"体验烂\",\"体验极差\"\
+          ,\n    \"不安全\",\"危险\",\"超速\",\"闯红灯\",\"违规\",\"事故\",\"出事\",\"吓到\",\"吓死\"\
+          ,\n    \"脏\",\"臭\",\"异味\",\"破\",\"旧\",\"破旧\",\"破烂\",\"车况差\",\n    \"骗人\"\
+          ,\"坑人\",\"黑店\",\"黑车\",\"无良\",\"恶意\",\"故意\"\n}\n\n# 网络情绪词（直接判定）\nDIRECT_POSITIVE\
+          \ = {\n    \"哈哈\",\"哈哈哈\",\"哈哈哈哈\",\"hh\",\"hhh\",\"哈\",\"嘻嘻\",\"嘿嘿\",\"\
+          嘎嘎\",\n    \"哦哦\",\"好哒\",\"好滴\",\"阔以\",\"可以的\",\"行的\",\"妥\",\"稳的\",\"没毛病\"\
+          ,\n    \"冲\",\"冲冲\",\"冲啊\",\"来了\",\"安排\",\"已安排\",\"已到\",\"到了\",\"秒到\",\n\
+          \    \"感谢司机\",\"感谢师傅\",\"师傅辛苦\",\"辛苦了\",\"感恩\",\"比心\",\"爱心\"\n}\n\nDIRECT_NEGATIVE\
+          \ = {\n    \"服了\",\"无了\",\"裂开\",\"蚌埠住了\",\"我的天\",\"我去\",\"救命\",\"算了\",\n\
+          \    \"不想说了\",\"懒得说\",\"说多了都是泪\",\"心态崩了\",\"破防了\",\"自闭了\",\n    \"黑名单\"\
+          ,\"永不再用\",\"再也不用\",\"最后一次\",\"第一次也是最后一次\"\n}\nNEGATION_WORDS = {\"不\",\"\
+          没\",\"无\",\"非\",\"别\",\"未\",\"莫\",\"勿\",\"毫不\",\"并不\",\"从不\",\"绝不\"}\nDEGREE_HIGH\
+          \ = {\"非常\",\"超级\",\"极其\",\"特别\",\"十分\",\"相当\",\"真的\",\"确实\",\"太\",\"很\"\
+          ,\"超\",\"贼\",\"巨\"}\nDEGREE_LOW  = {\"有点\",\"有些\",\"稍微\",\"略微\",\"一点\",\"\
+          还算\",\"还好\",\"勉强\",\"将就\"}\ndef analyze_sentiment(text):\n    text_clean\
+          \ = re.sub(r'\\[[\\u4e00-\\u9fa5a-zA-Z0-9_]+\\]', '', text).strip()\n  \
+          \  \n    # 直接判定词（优先检查）\n    for w in DIRECT_POSITIVE:\n        if w in text_clean:\n\
+          \            return \"positive\"\n    for w in DIRECT_NEGATIVE:\n      \
+          \  if w in text_clean:\n            return \"negative\"\n\n    pos_score\
+          \ = 0.0\n    neg_score = 0.0\n    chars = list(text_clean)\n    length =\
+          \ len(chars)\n\n    for i in range(length):\n        for wlen in range(2,\
+          \ 8):\n            if i + wlen > length:\n                break\n      \
+          \      word = \"\".join(chars[i:i+wlen])\n            if word not in POSITIVE_WORDS\
+          \ and word not in NEGATIVE_WORDS:\n                continue\n\n        \
+          \    context = \"\".join(chars[max(0, i-5):i])\n            negated = any(neg\
+          \ in context for neg in NEGATION_WORDS)\n            weight = 1.5 if any(d\
+          \ in context for d in DEGREE_HIGH) else (0.6 if any(d in context for d in\
+          \ DEGREE_LOW) else 1.0)\n\n            if word in POSITIVE_WORDS:\n    \
+          \            if negated:\n                    neg_score += weight\n    \
+          \            else:\n                    pos_score += weight\n          \
+          \  else:\n                if negated:\n                    pos_score +=\
+          \ weight * 0.5\n                else:\n                    neg_score +=\
+          \ weight\n\n    # 没有匹配到任何词：短评论倾向正面，长评论保持中性\n    if pos_score == 0 and neg_score\
+          \ == 0:\n        return \"positive\" if len(text_clean) <= 10 else \"neutral\"\
+          \n\n    ratio = pos_score / (pos_score + neg_score)\n    if ratio >= 0.55:\n\
+          \        return \"positive\"\n    elif ratio <= 0.4:\n        return \"\
+          negative\"\n    else:\n        return \"neutral\"\n\n\ndef main(records=\"\
+          []\", target_keyword=\"\"):\n    raw_keyword = target_keyword.strip()\n\
+          \    if not raw_keyword:\n        raw_keyword = \"未指定关键词\"\n# 支持多关键词，用逗号或空格分隔，单个关键词也正常工作\n\
+          \    keywords = [kw.strip() for kw in re.split(r'[,，\\s]+', raw_keyword)\
+          \ if kw.strip()]\n    if not keywords:\n        keywords = [raw_keyword]\n\
+          \    # 上游传来的是 text 字段，是 JSON 字符串，需要解析\n    if isinstance(records, str):\n\
+          \        try:\n            records = json.loads(records)\n        except\
+          \ Exception:\n            records = []\n\n    # 解析后可能是 dict 包着的\n    if\
+          \ isinstance(records, dict):\n        records = records.get(\"data\", records.get(\"\
+          items\", []))\n\n    if not isinstance(records, list):\n        records\
+          \ = []\n\n    comments_data = []\n    for record in records:\n        comment\
+          \ = \"\"\n        likes = 0\n        if isinstance(record, dict):\n    \
+          \        comment = str(record.get(\"评论内容\") or record.get(\"一级评论内容\") or\
+          \ \"\")\n            if not comment or comment.lower() in (\"none\", \"\
+          nan\", \"\"):\n                for key, val in record.items():\n       \
+          \             key_str = str(key)\n                    if \"评论\" in key_str\
+          \ and \"ID\" not in key_str and \"数\" not in key_str:\n                \
+          \        comment = str(val)\n                        break\n           \
+          \ try:\n                likes = int(float(str(record.get(\"点赞量\", 0) or\
+          \ 0)))\n            except Exception:\n                likes = 0\n     \
+          \   else:\n            comment = str(record)\n\n        comment = comment.strip()\n\
+          \        if comment and comment.lower() not in (\"none\", \"nan\", \"\"\
+          ):\n            comments_data.append({\"text\": comment, \"likes\": likes})\n\
+          \n    total_count = len(comments_data)\n    if total_count == 0:\n     \
+          \   return {\"error\": \"未读取到有效评论，请检查列名\"}\n\n    comments_list = [d[\"\
+          text\"] for d in comments_data]\n\n    # 2. 多关键词统计\n    keyword_counts =\
+          \ {kw: 0 for kw in keywords}\n    any_keyword_hit = 0\n\n    for text in\
+          \ comments_list:\n        text_lower = text.lower()\n        matched_any\
+          \ = False\n        for kw in keywords:\n            if kw.lower() in text_lower:\n\
+          \                keyword_counts[kw] += 1\n                matched_any =\
+          \ True\n        if matched_any:\n            any_keyword_hit += 1\n    \
+          \        \n    keyword_ratio = f\"{any_keyword_hit / total_count * 100:.2f}%\"\
+          \n    # 2. 多关键词统计 (补充明细占比)\n    details_list = []\n    for kw, cnt in keyword_counts.items():\n\
+          \        kw_ratio = (cnt / total_count * 100) if total_count > 0 else 0\n\
+          \        details_list.append(f\"'{kw}' ({cnt}条，占比 {kw_ratio:.1f}%)\")\n\
+          \    keyword_details = \" ｜ \".join(details_list)\n\n    # 3. 情感分析\n   \
+          \ pos_count = neg_count = neu_count = 0\n    for d in comments_data:\n \
+          \       r = analyze_sentiment(d[\"text\"])\n        if r == \"positive\"\
+          :\n            pos_count += 1\n        elif r == \"negative\":\n       \
+          \     neg_count += 1\n        else:\n            neu_count += 1\n\n    pos_ratio\
+          \ = f\"{pos_count / total_count * 100:.1f}%\"\n    neg_ratio = f\"{neg_count\
+          \ / total_count * 100:.1f}%\"\n    neu_ratio = f\"{neu_count / total_count\
+          \ * 100:.1f}%\"\n    sentiment_summary = f\"正面 {pos_count} 条（{pos_ratio}）｜负面\
+          \ {neg_count} 条（{neg_ratio}）｜中性 {neu_count} 条（{neu_ratio}）\"\n\n    # 4.\
+          \ 加权抽样\n    high = [d[\"text\"] for d in comments_data if d[\"likes\"] >=\
+          \ 100]\n    normal = [d[\"text\"] for d in comments_data if d[\"likes\"\
+          ] < 100]\n    selected = high[:100] + random.sample(normal, min(250 - min(len(high),\
+          \ 100), len(normal)))\n    sampled_comments = \"\\n\".join(selected)\n\n\
+          \    # 5. 提取 Top 10 高频词 (终极净化版)\n    stop_words_strong = {\n        \"我们\"\
+          , \"你们\", \"他们\", \"感觉\", \"觉得\", \"时候\", \"应该\", \"然后\", \n        \"因为\"\
+          , \"所以\", \"但是\", \"如果\", \"还是\", \"已经\", \"现在\", \"就是\",\n        \"好的\"\
+          , \"好像\", \"看到\", \"这里\", \"那里\", \"其实\", \"知道\",\n        \"可以\", \"大家\"\
+          , \"滴滴\", \"自己\", \"真的\", \"这个\", \"那个\", \"什么\",\n        \"怎么\", \"这么\"\
+          , \"那么\", \"有点\", \"一下\", \"一直\", \"一次\", \"出来\",\n        \"不会\", \"不能\"\
+          , \"不要\", \"不是\"\n    }\n    \n    # 强力单字停用字符：只要 N-gram 抓出来的词里包含这里面的任意一个字，直接作废\n\
+          \    # 新增了对语气词（哈、呵、呜等）的无差别击杀\n    bad_chars = set(\"的了是就有在你也我他她它与及和着这那啊太很没去哈呵嘻哎呀哇哦嗯呜唉呢呗吧吗喔\"\
+          )\n    \n    # 【关键修复 1】：在提取中文之前，先把所有的 [表情包文本] 直接物理抹除\n    text_no_emojis\
+          \ = re.sub(r'\\[.*?\\]', '', \"\".join(comments_list))\n    \n    # 【关键修复\
+          \ 2】：剔除掉纯英文（防止部分乱码），只保留纯汉字进行分析\n    all_text_clean = re.sub(r'[^\\u4e00-\\\
+          u9fa5]', '', text_no_emojis)\n    \n    length = len(all_text_clean)\n \
+          \   raw_counts = {}\n    \n    # 抓取 2字、3字、4字词\n    for n in [2, 3, 4]:\n\
+          \        for i in range(length - n + 1):\n            w = all_text_clean[i:i+n]\n\
+          \            # 过滤包含停用词或坏字的词块\n            if w in stop_words_strong or any(bc\
+          \ in w for bc in bad_chars):\n                continue\n            raw_counts[w]\
+          \ = raw_counts.get(w, 0) + 1\n\n    valid_counts = {w: c for w, c in raw_counts.items()\
+          \ if c >= 3}\n\n    # 子串消除 (Subsumption) 算法，去重叠词\n    words = sorted(valid_counts.keys(),\
+          \ key=len, reverse=True)\n    for i, longer in enumerate(words):\n     \
+          \   if valid_counts[longer] <= 0:\n            continue\n        for shorter\
+          \ in words[i+1:]:\n            if valid_counts[shorter] > 0 and shorter\
+          \ in longer:\n                valid_counts[shorter] -= valid_counts[longer]\n\
+          \n    # ====== 用以下代码替换掉原来最后的那段排序逻辑 ======\n    \n    # 1. 先计算所有候选词的“真正提及占比”\n\
+          \    word_ratios = []\n    for word, freq in valid_counts.items():\n   \
+          \     if freq <= 2: \n            continue\n            \n        # 精确计算提及率：有多少条评论真正包含了这个词\n\
+          \        mention_count = sum(1 for c in comments_list if word in c)\n  \
+          \      ratio = (mention_count / total_count) * 100\n        \n        #\
+          \ 只保留占比大于 0.5% 的有效词\n        if ratio >= 0.5:\n            word_ratios.append((word,\
+          \ ratio))\n\n    # 2. 关键修复：严格按照“占比 (ratio)”从大到小进行排序！\n    sorted_ratios\
+          \ = sorted(word_ratios, key=lambda x: x[1], reverse=True)\n    \n     #\
+          \ 3. 取前 10 名并格式化输出\n    top_keywords_list = []\n    for count, (word, ratio)\
+          \ in enumerate(sorted_ratios[:10]):\n        top_keywords_list.append(f\"\
+          {count+1}. {word} (占比 {ratio:.1f}%)\")\n\n    top_keywords_str = \"\\n\"\
+          .join(top_keywords_list) if top_keywords_list else \"无有效高频词\"\n\n    # ==================\
+          \ \U0001F447 就是漏了下面这一段 \U0001F447 ==================\n    compiled_data\
+          \ = f\"\"\"\n- 目标检索词：{raw_keyword}\n- 总评论基数：{total_count} 条\n- 命中关键词的评论：{any_keyword_hit}\
+          \ 条（占比 {keyword_ratio}）\n- 关键词明细：{keyword_details}\n- 整体情感分布：{sentiment_summary}\n\
+          \n【高频词 Top 10】\n{top_keywords_str}\n\n【评论抽样】\n{sampled_comments}\n    \"\
+          \"\"\n    # ================== \U0001F446 就是漏了上面这一段 \U0001F446 ==================\n\
+          \n    # 返回时，除了原有的变量，额外增加这个打包好的 compiled_data\n    return {\n        \"total_count\"\
+          :       total_count,\n        \"keyword_count\":     any_keyword_hit, \n\
+          \        \"keyword_ratio\":     keyword_ratio,\n        \"target_keyword\"\
+          :    raw_keyword,\n        \"keyword_details\":   keyword_details,\n   \
+          \     \"pos_count\":         pos_count,\n        \"neg_count\":        \
+          \ neg_count,\n        \"neu_count\":         neu_count,\n        \"pos_ratio\"\
+          :         pos_ratio,\n        \"neg_ratio\":         neg_ratio,\n      \
+          \  \"neu_ratio\":         neu_ratio,\n        \"sentiment_summary\": sentiment_summary,\n\
+          \        \"sampled_comments\":  sampled_comments,\n        \"top_keywords_str\"\
+          :  top_keywords_str,\n        \"compiled_data\":     compiled_data  # 现在这里就不会报错了\n\
+          \    }"
+        code_language: python3
+        outputs:
+          compiled_data:
+            children: null
+            type: string
+          keyword_count:
+            children: null
+            type: number
+          keyword_details:
+            children: null
+            type: string
+          keyword_ratio:
+            children: null
+            type: string
+          neg_count:
+            children: null
+            type: number
+          neg_ratio:
+            children: null
+            type: string
+          neu_count:
+            children: null
+            type: number
+          neu_ratio:
+            children: null
+            type: string
+          pos_count:
+            children: null
+            type: number
+          pos_ratio:
+            children: null
+            type: string
+          sampled_comments:
+            children: null
+            type: string
+          sentiment_summary:
+            children: null
+            type: string
+          target_keyword:
+            children: null
+            type: string
+          top_keywords_str:
+            children: null
+            type: string
+          total_count:
+            children: null
+            type: number
+        selected: false
+        title: 代码执行
+        type: code
+        variables:
+        - value_selector:
+          - '1776326685492'
+          - text
+          value_type: string
+          variable: records
+        - value_selector:
+          - '1776326271838'
+          - target_keyword
+          value_type: string
+          variable: target_keyword
+      height: 52
+      id: '1776326611571'
+      position:
+        x: 595.029202306745
+        y: 388.0483445777227
+      positionAbsolute:
+        x: 595.029202306745
+        y: 388.0483445777227
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        is_team_authorization: true
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Upload file.
+            ja_JP: Upload file.
+            pt_BR: Upload file.
+            zh_Hans: 上传的文件.
+          label:
+            en_US: File
+            ja_JP: File
+            pt_BR: File
+            zh_Hans: 文件
+          llm_description: Upload file.
+          max: null
+          min: null
+          name: file
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: file
+        params:
+          file: ''
+        plugin_id: qiangxinglin/excel_tools
+        plugin_unique_identifier: qiangxinglin/excel_tools:0.0.4@159fb43e7770973a56a8748b8a3bb1ae1a84fe46da59ab7c46c4689fad4680a0
+        provider_icon: https://agenthub.intra.xiaojukeji.com/console/api/workspaces/current/plugin/icon?tenant_id=fd5852c7-2aa8-4acb-aee6-d84c9b5034ca&filename=633fbc546fec8855ed43a00343339462654d57473a79fc63b2858c1462470672.svg
+        provider_id: qiangxinglin/excel_tools/excel_tools
+        provider_name: qiangxinglin/excel_tools/excel_tools
+        provider_type: builtin
+        selected: false
+        title: Excel转Json
+        tool_configurations: {}
+        tool_description: 将Excel转换为Json。
+        tool_label: Excel转Json
+        tool_name: excel2json
+        tool_node_version: '2'
+        tool_parameters:
+          file:
+            type: variable
+            value:
+            - '1776326271838'
+            - user_input_file
+        type: tool
+      height: 52
+      id: '1776326685492'
+      position:
+        x: 315.1055696767178
+        y: 223.58449745301905
+      positionAbsolute:
+        x: 315.1055696767178
+        y: 223.58449745301905
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1776326611571'
+          - compiled_data
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-v3-public
+          provider: profilechenyang/deepseek/deepseek
+        prompt_template:
+        - id: b6ab2f46-f0c4-4dfb-b3df-cbbac9a1ff14
+          role: system
+          text: '你是一个专业的社媒舆情分析专家。
+
+            前置的代码节点已经完成了极其精确的全量数据统计、多关键词拆分以及情感分析。你现在的核心任务是：根据输入的数据完成排版，并基于抽样评论进行深度的【话题提炼】。
+
+
+            ━━━━━━━━━━ 核心任务 ━━━━━━━━━━
+
+            1. 数据填空：严格使用用户提供的数据填入模板，**绝对禁止**自己进行任何加减乘除计算。
+
+            2. 情感总结：根据提供的情感分布数据，写一句精炼的整体情绪倾向结论。
+
+            3. 话题提炼：从【评论抽样】中归纳出 3 个用户真实关心的核心讨论方向。每条用一句话描述，聚焦实质内容，禁止出现"用户表示""评论区"等废话套话。
+
+
+            ━━━━━━━━━━ 输出模板（格式与 emoji 必须完全一致）━━━━━━━━━━
+
+            📊 **评论舆情分析报告**
+
+            ---
+
+            1️⃣ **关键词搜索分析**
+
+            - 目标检索词：{{#1776326611571.target_keyword#}}
+
+            - 总评论基数：{{#1776326611571.total_count#}} 条
+
+            - 命中关键词的评论：{{#1776326611571.keyword_count#}}条（占比 {{#1776326611571.keyword_ratio#}}）
+
+            - 关键词明细：{{#1776326611571.keyword_details#}}
+
+            ---
+
+            2️⃣ **全量情感分析**（基于 {{#1776326611571.total_count#}} 条总评论）
+
+            - 整体分布：{{#1776326611571.sentiment_summary#}}
+
+            - 💡 舆情结论：[根据数据填写一句话总结整体情绪倾向]
+
+            ---
+
+            3️⃣ **高频词 Top 10**
+
+            {{#1776326611571.top_keywords_str#}}
+
+            ---
+
+            4️⃣ **核心讨论焦点**
+
+            - 🎯 [焦点一：直接写出具体问题或赞点]
+
+            - 🎯 [焦点二：直接写出具体问题或赞点]
+
+            - 🎯 [焦点三：直接写出具体问题或赞点]'
+        - id: 22d6a67e-8603-4ed2-b787-60a7cf4002c4
+          role: user
+          text: '请根据以下前置节点传来的统计结果和评论数据，严格按照系统设定的模板输出分析报告：
+
+
+            {{#1776326611571.compiled_data#}}'
+        selected: false
+        structured_output_enabled: false
+        title: LLM
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1776327591765'
+      position:
+        x: 893.9670804254183
+        y: 399.0288708413859
+      positionAbsolute:
+        x: 893.9670804254183
+        y: 399.0288708413859
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import requests\nimport datetime\n\ndef main(report_text=\"\", username=\"\
+          Jack Shen\"):\n    \n    APIKEY   = \"9761e78dab4d414a9255f4af99d95047\"\
+          \n    USERNAME = username\n    GROUP_ID = \"2207572231204\"\n    PARENT_ID\
+          \ = 2207590461807\n    \n    now = datetime.datetime.now().strftime(\"%Y%m%d_%H%M%S\"\
+          )\n    file_name = f\"舆情分析报告_{now}.txt\"\n    \n    url = \"http://api-kylin.intra.xiaojukeji.com/EP_CLOUD_DISK_oe_openapi_cooper_server_prod/openapi/v1/files\"\
+          \n    \n    headers = {\n        \"Apikey\": APIKEY,\n        \"username\"\
+          : USERNAME\n    }\n    \n    files = {\n        \"file\": (file_name, report_text.encode(\"\
+          utf-8\"), \"text/plain\")\n    }\n    \n    resp = requests.post(\n    \
+          \    url,\n        headers=headers,\n        files=files,\n        data={\"\
+          parentid\": PARENT_ID},\n        params={\"group_id\": GROUP_ID}\n    )\n\
+          \    \n    result = resp.json()\n    \n    if result.get(\"code\") == 200:\n\
+          \        file_id = result[\"data\"][0][\"id\"]\n        return {\n     \
+          \       \"success\": \"上传成功\",\n            \"file_name\": file_name,\n\
+          \            \"file_id\": str(file_id)\n        }\n    else:\n        return\
+          \ {\n            \"success\": \"上传失败\",\n            \"error\": str(result)\n\
+          \        }"
+        code_language: python3
+        outputs:
+          file_id:
+            children: null
+            type: string
+          file_name:
+            children: null
+            type: string
+          success:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行 2
+        type: code
+        variables:
+        - value_selector:
+          - '1776327591765'
+          - text
+          value_type: string
+          variable: report_text
+      height: 52
+      id: '1777001205217'
+      position:
+        x: 1209.8286286263494
+        y: 428.30150898260655
+      positionAbsolute:
+        x: 1209.8286286263494
+        y: 428.30150898260655
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        outputs:
+        - value_selector:
+          - '1777001205217'
+          - success
+          value_type: string
+          variable: success
+        - value_selector:
+          - '1777001205217'
+          - file_name
+          value_type: string
+          variable: file_name
+        - value_selector:
+          - '1777001205217'
+          - file_id
+          value_type: string
+          variable: file_id
+        - value_selector:
+          - '1776327591765'
+          - text
+          value_type: string
+          variable: text
+        selected: false
+        title: 输出
+        type: end
+      height: 166
+      id: '1777001246151'
+      position:
+        x: 1514.787789858089
+        y: 424.3085903412744
+      positionAbsolute:
+        x: 1514.787789858089
+        y: 424.3085903412744
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 111.45715716213022
+      y: 13.933349823762342
+      zoom: 0.7488804208474761
+  rag_pipeline_variables: []

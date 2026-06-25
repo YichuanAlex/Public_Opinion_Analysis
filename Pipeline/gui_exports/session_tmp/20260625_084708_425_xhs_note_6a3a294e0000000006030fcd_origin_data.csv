@@ -1,0 +1,306 @@
+﻿source_url,note_id,xsec_source,cursor_score,items.0.id,items.0.model_type,items.0.note_card.time,items.0.note_card.ip_location,items.0.note_card.title,items.0.note_card.desc,items.0.note_card.user.user_id,items.0.note_card.user.nickname,items.0.note_card.user.avatar,items.0.note_card.user.xsec_token,items.0.note_card.interact_info.collected,items.0.note_card.interact_info.collected_count,items.0.note_card.interact_info.comment_count,items.0.note_card.interact_info.share_count,items.0.note_card.interact_info.followed,items.0.note_card.interact_info.relation,items.0.note_card.interact_info.liked,items.0.note_card.interact_info.liked_count,items.0.note_card.last_update_time,items.0.note_card.note_id,items.0.note_card.image_list.0.width,items.0.note_card.image_list.0.url,items.0.note_card.image_list.0.trace_id,items.0.note_card.image_list.0.info_list.0.image_scene,items.0.note_card.image_list.0.info_list.0.url,items.0.note_card.image_list.0.info_list.1.image_scene,items.0.note_card.image_list.0.info_list.1.url,items.0.note_card.image_list.0.live_photo,items.0.note_card.image_list.0.file_id,items.0.note_card.image_list.0.height,items.0.note_card.image_list.0.url_pre,items.0.note_card.image_list.0.url_default,items.0.note_card.image_list.0.stream,items.0.note_card.image_list.1.height,items.0.note_card.image_list.1.url,items.0.note_card.image_list.1.url_pre,items.0.note_card.image_list.1.url_default,items.0.note_card.image_list.1.stream,items.0.note_card.image_list.1.file_id,items.0.note_card.image_list.1.width,items.0.note_card.image_list.1.trace_id,items.0.note_card.image_list.1.info_list.0.image_scene,items.0.note_card.image_list.1.info_list.0.url,items.0.note_card.image_list.1.info_list.1.image_scene,items.0.note_card.image_list.1.info_list.1.url,items.0.note_card.image_list.1.live_photo,items.0.note_card.image_list.2.width,items.0.note_card.image_list.2.info_list.0.url,items.0.note_card.image_list.2.info_list.0.image_scene,items.0.note_card.image_list.2.info_list.1.image_scene,items.0.note_card.image_list.2.info_list.1.url,items.0.note_card.image_list.2.trace_id,items.0.note_card.image_list.2.url_pre,items.0.note_card.image_list.2.url_default,items.0.note_card.image_list.2.stream,items.0.note_card.image_list.2.live_photo,items.0.note_card.image_list.2.file_id,items.0.note_card.image_list.2.height,items.0.note_card.image_list.2.url,items.0.note_card.image_list.3.info_list.0.image_scene,items.0.note_card.image_list.3.info_list.0.url,items.0.note_card.image_list.3.info_list.1.image_scene,items.0.note_card.image_list.3.info_list.1.url,items.0.note_card.image_list.3.url_pre,items.0.note_card.image_list.3.url_default,items.0.note_card.image_list.3.stream,items.0.note_card.image_list.3.live_photo,items.0.note_card.image_list.3.width,items.0.note_card.image_list.3.url,items.0.note_card.image_list.3.trace_id,items.0.note_card.image_list.3.file_id,items.0.note_card.image_list.3.height,items.0.note_card.image_list.4.url_default,items.0.note_card.image_list.4.width,items.0.note_card.image_list.4.url,items.0.note_card.image_list.4.trace_id,items.0.note_card.image_list.4.url_pre,items.0.note_card.image_list.4.stream,items.0.note_card.image_list.4.live_photo,items.0.note_card.image_list.4.file_id,items.0.note_card.image_list.4.height,items.0.note_card.image_list.4.info_list.0.image_scene,items.0.note_card.image_list.4.info_list.0.url,items.0.note_card.image_list.4.info_list.1.url,items.0.note_card.image_list.4.info_list.1.image_scene,items.0.note_card.image_list.5.info_list.0.image_scene,items.0.note_card.image_list.5.info_list.0.url,items.0.note_card.image_list.5.info_list.1.image_scene,items.0.note_card.image_list.5.info_list.1.url,items.0.note_card.image_list.5.stream,items.0.note_card.image_list.5.live_photo,items.0.note_card.image_list.5.file_id,items.0.note_card.image_list.5.height,items.0.note_card.image_list.5.width,items.0.note_card.image_list.5.url,items.0.note_card.image_list.5.trace_id,items.0.note_card.image_list.5.url_pre,items.0.note_card.image_list.5.url_default,items.0.note_card.image_list.6.stream,items.0.note_card.image_list.6.live_photo,items.0.note_card.image_list.6.height,items.0.note_card.image_list.6.width,items.0.note_card.image_list.6.url,items.0.note_card.image_list.6.info_list.0.image_scene,items.0.note_card.image_list.6.info_list.0.url,items.0.note_card.image_list.6.info_list.1.image_scene,items.0.note_card.image_list.6.info_list.1.url,items.0.note_card.image_list.6.url_pre,items.0.note_card.image_list.6.url_default,items.0.note_card.image_list.6.file_id,items.0.note_card.image_list.6.trace_id,items.0.note_card.image_list.7.url_pre,items.0.note_card.image_list.7.live_photo,items.0.note_card.image_list.7.width,items.0.note_card.image_list.7.trace_id,items.0.note_card.image_list.7.url,items.0.note_card.image_list.7.info_list.0.image_scene,items.0.note_card.image_list.7.info_list.0.url,items.0.note_card.image_list.7.info_list.1.image_scene,items.0.note_card.image_list.7.info_list.1.url,items.0.note_card.image_list.7.url_default,items.0.note_card.image_list.7.stream,items.0.note_card.image_list.7.file_id,items.0.note_card.image_list.7.height,items.0.note_card.tag_list.0.id,items.0.note_card.tag_list.0.name,items.0.note_card.tag_list.0.type,items.0.note_card.tag_list.1.id,items.0.note_card.tag_list.1.name,items.0.note_card.tag_list.1.type,items.0.note_card.tag_list.2.id,items.0.note_card.tag_list.2.name,items.0.note_card.tag_list.2.type,items.0.note_card.tag_list.3.type,items.0.note_card.tag_list.3.id,items.0.note_card.tag_list.3.name,items.0.note_card.tag_list.4.id,items.0.note_card.tag_list.4.name,items.0.note_card.tag_list.4.type,items.0.note_card.tag_list.5.type,items.0.note_card.tag_list.5.id,items.0.note_card.tag_list.5.name,items.0.note_card.tag_list.6.id,items.0.note_card.tag_list.6.name,items.0.note_card.tag_list.6.type,items.0.note_card.at_user_list,items.0.note_card.illegal_info.desc,items.0.note_card.illegal_info.left_icon,items.0.note_card.illegal_info.link,items.0.note_card.type,items.0.note_card.share_info.un_share,current_time,raw_json,media_enrichment.image_count,media_enrichment.transcript_source_count,media_enrichment.image_ocr_text,media_enrichment.video_transcript,media_enrichment.errors
+https://www.xiaohongshu.com/discovery/item/6a3a294e0000000006030fcd?source=webshare&xhsshare=pc_web&xsec_token=CBGh41X1f3I9tyzLaZ6mqad0d0j8pDeAptFoI4Z3EFcI0=&xsec_source=pc_share,6a3a294e0000000006030fcd,pc_share,,6a3a294e0000000006030fcd,note,1782196558000,湖南,「千千许愿箱」广州站保姆级出行攻略‼️,"👇鸟姐集合！期待已久的快闪来啦~
+保姆级出行攻略速藏💪🏻跟着小展不迷路
+⏰6月27日-6月28日
+📍广州天河领展广场 L4中庭
+	
+🚇地铁出行
+坐5号线到潭村站D出口出站🚶‍♀️
+步行路线：D出口出来直走➡️看到瑞幸咖啡右转➡️继续直走约500米就到啦，跟着走不会丢
+	
+🚌公交出行
+可以坐到这两个站下车👇
+🚏红线女中心站：下车后步行约20米就到
+🚏国防大厦站：下车后步行约300米
+姐妹们可以根据自己的位置选最方便的路线～
+	
+🚗打车福利（省钱必看）
+滴滴出行、如约出行🧧起/终点in广州天河领展广场均有出行优惠
+👸🏻号🔍【广州天河领展广场】后台发送“出行”即可get优惠
+	
+🧳行李寄存
+📍商场B2寄存柜💰￥2/h
+🎁会员28积分即可兑换1h免费自助寄存券✨
+直梯/扶梯均可到达~~P5-6自行查看路线指引
+	
+🕐小贴士
+商场每日10:00-22:00营业，大家安排好时间哦～
+❤️请友好打卡、有序排队、注意安全
+❤️后续更新粉丝专属福利、商场美食攻略✨蹲住不迷路！
+限定“痛楼”即将开放，欢迎打卡
+	
+#广州天河领展广场[话题]#  #千千许愿箱[话题]#  #易烊千玺[话题]#  #易烊千玺快闪[话题]#    #出行攻略[话题]#  #广州吃喝玩乐[话题]#  #周末去哪儿[话题]#",64535258000000002a00bf11,广州天河领展广场,https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31mq248dml8005p2ja9cahfohsv9dcn0,ABtBzUU9WzP03xK5wMQZI3zZfxAcps16PbpAo87D9iLC4=,False,530,172,614,False,none,False,1204,1782196559000,6a3a294e0000000006030fcd,2588,,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606250847/ebf820e9bb0c86bc7f2bc386c256378a/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606250847/3340f5271f5974a810a9920652c04e7d/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_dft_wlteh_webp_3,False,spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0,3458,http://sns-webpic-qc.xhscdn.com/202606250847/ebf820e9bb0c86bc7f2bc386c256378a/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/3340f5271f5974a810a9920652c04e7d/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_dft_wlteh_webp_3,{},3458,,http://sns-webpic-qc.xhscdn.com/202606250847/ddf5a1e9111690c6bffaf756d0262b0b/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/2a9f5c83d091a9fe812b41f814a7a0f8/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_dft_wlteh_webp_3,{},spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8,2588,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606250847/ddf5a1e9111690c6bffaf756d0262b0b/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606250847/2a9f5c83d091a9fe812b41f814a7a0f8/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_dft_wlteh_webp_3,False,2588,http://sns-webpic-qc.xhscdn.com/202606250847/e35c1882f48e45aa2afcbaed27a5928d/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_prv_wlteh_webp_3,WB_PRV,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606250847/90e1cd2938c02c32f1d49bcc11ee6861/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_dft_wlteh_webp_3,,http://sns-webpic-qc.xhscdn.com/202606250847/e35c1882f48e45aa2afcbaed27a5928d/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/90e1cd2938c02c32f1d49bcc11ee6861/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_dft_wlteh_webp_3,{},False,spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0,3458,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606250847/f0304e31e74ce5a089a7faa014fe90df/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606250847/4387f5f5d344e7b17e98bfbe3dd7b4dd/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_dft_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/f0304e31e74ce5a089a7faa014fe90df/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/4387f5f5d344e7b17e98bfbe3dd7b4dd/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_dft_wlteh_webp_3,{},False,2588,,,spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g,3458,http://sns-webpic-qc.xhscdn.com/202606250847/32f4f178732690102f65e621c21625ac/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_dft_wlteh_webp_3,2588,,,http://sns-webpic-qc.xhscdn.com/202606250847/37ba11088ed1ca7f450d6adfa30044ab/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_prv_wlteh_webp_3,{},False,spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg,3458,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606250847/37ba11088ed1ca7f450d6adfa30044ab/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/32f4f178732690102f65e621c21625ac/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_dft_wlteh_webp_3,WB_DFT,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606250847/b0c36dee59e5111316e387ba4d2d4dc3/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606250847/55f316a332f02fcb05298d152af3f412/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_dft_wlteh_webp_3,{},False,spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko,3458,2588,,,http://sns-webpic-qc.xhscdn.com/202606250847/b0c36dee59e5111316e387ba4d2d4dc3/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/55f316a332f02fcb05298d152af3f412/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_dft_wlteh_webp_3,{},False,1341,1080,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606250847/a85e4f4710d0fe862034fe0226df1ace/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606250847/7a68f597a036ec9794b0611ae34b9f75/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_dft_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/a85e4f4710d0fe862034fe0226df1ace/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/7a68f597a036ec9794b0611ae34b9f75/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_dft_wlteh_webp_3,spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20,,http://sns-webpic-qc.xhscdn.com/202606250847/973aebfa98590a2b17357c4dade71941/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_prv_wlteh_webp_3,False,1242,,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606250847/973aebfa98590a2b17357c4dade71941/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606250847/3f985ce5c506f582340f352cbe15db34/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_dft_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606250847/3f985ce5c506f582340f352cbe15db34/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_dft_wlteh_webp_3,{},spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo,1660,646ceae000000000250248fb,广州天河领展广场,topic,65dfe8f6000000000201b2d4,千千许愿箱,topic,5be2336aad58650001a46792,易烊千玺,topic,topic,6a09a68c0000000001032b25,易烊千玺快闪,5c07ab6fb6f6ab0001981156,出行攻略,topic,topic,5be55c4880b72a000148df17,广州吃喝玩乐,56f7ffe6b46c5d5ca95b82e8,周末去哪儿,topic,[],可能含AI生成内容,https://picasso-static.xiaohongshu.com/fe-platfrom/bc740cc162107169b504c4c1e5ee35f92eaa8456.png,xhsdiscover://rn/kuri/noteStickers?background_transparent_v2=true&needNewRootNavigation=true&noteId=6a3a294e0000000006030fcd,normal,False,1782348433679,"{""cursor_score"":"""",""items"":[{""id"":""6a3a294e0000000006030fcd"",""model_type"":""note"",""note_card"":{""time"":1782196558000,""ip_location"":""湖南"",""title"":""「千千许愿箱」广州站保姆级出行攻略‼️"",""desc"":""👇鸟姐集合！期待已久的快闪来啦~\n保姆级出行攻略速藏💪🏻跟着小展不迷路\n⏰6月27日-6月28日\n📍广州天河领展广场 L4中庭\n\t\n🚇地铁出行\n坐5号线到潭村站D出口出站🚶‍♀️\n步行路线：D出口出来直走➡️看到瑞幸咖啡右转➡️继续直走约500米就到啦，跟着走不会丢\n\t\n🚌公交出行\n可以坐到这两个站下车👇\n🚏红线女中心站：下车后步行约20米就到\n🚏国防大厦站：下车后步行约300米\n姐妹们可以根据自己的位置选最方便的路线～\n\t\n🚗打车福利（省钱必看）\n滴滴出行、如约出行🧧起/终点in广州天河领展广场均有出行优惠\n👸🏻号🔍【广州天河领展广场】后台发送“出行”即可get优惠\n\t\n🧳行李寄存\n📍商场B2寄存柜💰￥2/h\n🎁会员28积分即可兑换1h免费自助寄存券✨\n直梯/扶梯均可到达~~P5-6自行查看路线指引\n\t\n🕐小贴士\n商场每日10:00-22:00营业，大家安排好时间哦～\n❤️请友好打卡、有序排队、注意安全\n❤️后续更新粉丝专属福利、商场美食攻略✨蹲住不迷路！\n限定“痛楼”即将开放，欢迎打卡\n\t\n#广州天河领展广场[话题]#  #千千许愿箱[话题]#  #易烊千玺[话题]#  #易烊千玺快闪[话题]#    #出行攻略[话题]#  #广州吃喝玩乐[话题]#  #周末去哪儿[话题]#"",""user"":{""user_id"":""64535258000000002a00bf11"",""nickname"":""广州天河领展广场"",""avatar"":""https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31mq248dml8005p2ja9cahfohsv9dcn0"",""xsec_token"":""ABtBzUU9WzP03xK5wMQZI3zZfxAcps16PbpAo87D9iLC4=""},""interact_info"":{""collected"":false,""collected_count"":""530"",""comment_count"":""172"",""share_count"":""614"",""followed"":false,""relation"":""none"",""liked"":false,""liked_count"":""1204""},""last_update_time"":1782196559000,""note_id"":""6a3a294e0000000006030fcd"",""image_list"":[{""width"":2588,""url"":"""",""trace_id"":"""",""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/ebf820e9bb0c86bc7f2bc386c256378a/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/3340f5271f5974a810a9920652c04e7d/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_dft_wlteh_webp_3""}],""live_photo"":false,""file_id"":""spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0"",""height"":3458,""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/ebf820e9bb0c86bc7f2bc386c256378a/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_prv_wlteh_webp_3"",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/3340f5271f5974a810a9920652c04e7d/spectrum/1040g0k0321ofnjnimu005p2ja9cahfohs16fqp0!nd_dft_wlteh_webp_3"",""stream"":{}},{""height"":3458,""url"":"""",""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/ddf5a1e9111690c6bffaf756d0262b0b/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_prv_wlteh_webp_3"",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/2a9f5c83d091a9fe812b41f814a7a0f8/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_dft_wlteh_webp_3"",""stream"":{},""file_id"":""spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8"",""width"":2588,""trace_id"":"""",""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/ddf5a1e9111690c6bffaf756d0262b0b/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/2a9f5c83d091a9fe812b41f814a7a0f8/spectrum/1040g0k0321ofnjnimu0g5p2ja9cahfoheu1vhv8!nd_dft_wlteh_webp_3""}],""live_photo"":false},{""width"":2588,""info_list"":[{""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/e35c1882f48e45aa2afcbaed27a5928d/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_prv_wlteh_webp_3"",""image_scene"":""WB_PRV""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/90e1cd2938c02c32f1d49bcc11ee6861/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_dft_wlteh_webp_3""}],""trace_id"":"""",""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/e35c1882f48e45aa2afcbaed27a5928d/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_prv_wlteh_webp_3"",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/90e1cd2938c02c32f1d49bcc11ee6861/spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0!nd_dft_wlteh_webp_3"",""stream"":{},""live_photo"":false,""file_id"":""spectrum/1040g0k0321ofnjnimu105p2ja9cahfohv6lm0p0"",""height"":3458,""url"":""""},{""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/f0304e31e74ce5a089a7faa014fe90df/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/4387f5f5d344e7b17e98bfbe3dd7b4dd/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_dft_wlteh_webp_3""}],""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/f0304e31e74ce5a089a7faa014fe90df/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_prv_wlteh_webp_3"",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/4387f5f5d344e7b17e98bfbe3dd7b4dd/spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g!nd_dft_wlteh_webp_3"",""stream"":{},""live_photo"":false,""width"":2588,""url"":"""",""trace_id"":"""",""file_id"":""spectrum/1040g0k0321ofnjnimu1g5p2ja9cahfoh9rske2g"",""height"":3458},{""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/32f4f178732690102f65e621c21625ac/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_dft_wlteh_webp_3"",""width"":2588,""url"":"""",""trace_id"":"""",""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/37ba11088ed1ca7f450d6adfa30044ab/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_prv_wlteh_webp_3"",""stream"":{},""live_photo"":false,""file_id"":""spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg"",""height"":3458,""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/37ba11088ed1ca7f450d6adfa30044ab/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_prv_wlteh_webp_3""},{""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/32f4f178732690102f65e621c21625ac/spectrum/1040g0k0321ofnjnimu205p2ja9cahfohp4csebg!nd_dft_wlteh_webp_3"",""image_scene"":""WB_DFT""}]},{""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/b0c36dee59e5111316e387ba4d2d4dc3/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/55f316a332f02fcb05298d152af3f412/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_dft_wlteh_webp_3""}],""stream"":{},""live_photo"":false,""file_id"":""spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko"",""height"":3458,""width"":2588,""url"":"""",""trace_id"":"""",""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/b0c36dee59e5111316e387ba4d2d4dc3/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_prv_wlteh_webp_3"",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/55f316a332f02fcb05298d152af3f412/spectrum/1040g0k0321ofnjnimu2g5p2ja9cahfohot33gko!nd_dft_wlteh_webp_3""},{""stream"":{},""live_photo"":false,""height"":1341,""width"":1080,""url"":"""",""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/a85e4f4710d0fe862034fe0226df1ace/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/7a68f597a036ec9794b0611ae34b9f75/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_dft_wlteh_webp_3""}],""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/a85e4f4710d0fe862034fe0226df1ace/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_prv_wlteh_webp_3"",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/7a68f597a036ec9794b0611ae34b9f75/spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20!nd_dft_wlteh_webp_3"",""file_id"":""spectrum/1040g0k0321ofnjnimu305p2ja9cahfoh56uil20"",""trace_id"":""""},{""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606250847/973aebfa98590a2b17357c4dade71941/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_prv_wlteh_webp_3"",""live_photo"":false,""width"":1242,""trace_id"":"""",""url"":"""",""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/973aebfa98590a2b17357c4dade71941/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606250847/3f985ce5c506f582340f352cbe15db34/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_dft_wlteh_webp_3""}],""url_default"":""http://sns-webpic-qc.xhscdn.com/202606250847/3f985ce5c506f582340f352cbe15db34/spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo!nd_dft_wlteh_webp_3"",""stream"":{},""file_id"":""spectrum/1040g0k0321ofnjnimu3g5p2ja9cahfoh789jbfo"",""height"":1660}],""tag_list"":[{""id"":""646ceae000000000250248fb"",""name"":""广州天河领展广场"",""type"":""topic""},{""id"":""65dfe8f6000000000201b2d4"",""name"":""千千许愿箱"",""type"":""topic""},{""id"":""5be2336aad58650001a46792"",""name"":""易烊千玺"",""type"":""topic""},{""type"":""topic"",""id"":""6a09a68c0000000001032b25"",""name"":""易烊千玺快闪""},{""id"":""5c07ab6fb6f6ab0001981156"",""name"":""出行攻略"",""type"":""topic""},{""type"":""topic"",""id"":""5be55c4880b72a000148df17"",""name"":""广州吃喝玩乐""},{""id"":""56f7ffe6b46c5d5ca95b82e8"",""name"":""周末去哪儿"",""type"":""topic""}],""at_user_list"":[],""illegal_info"":{""desc"":""可能含AI生成内容"",""left_icon"":""https://picasso-static.xiaohongshu.com/fe-platfrom/bc740cc162107169b504c4c1e5ee35f92eaa8456.png"",""link"":""xhsdiscover://rn/kuri/noteStickers?background_transparent_v2=true&needNewRootNavigation=true&noteId=6a3a294e0000000006030fcd""},""type"":""normal"",""share_info"":{""un_share"":false}}}],""current_time"":1782348433679}",12,0,"【第1张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+06/27-06/28
+出行篇
+广州天河领展广场
+LINKPLNZKEEANIE
+NEWS
+TIANHE
+DNK PLAZATIANHE
+快闪活动
+
+【第2张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+06/27-06/28
+出行篇
+广州天河领展广场
+LINK PLAZA TLANIIE
+NEWS
+TIANHE
+LINK PLAZA TIANHE
+快闪活动
+
+【第3张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+MERTO 地铁
+出行
+5号线潭村站D出口
+步行约700米至广州天河领展广场
+步行指引
+LINK
+PL
+领区厂。
+5号线潭村站D出口
+直行至瑞幸咖啡处右转
+右转后直行约500米到达
+NEWS
+TIANHE
+LNK PLAZA TIANHE
+快闪活动
+
+【第4张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+MERTO 地铁
+出行
+5号线潭村站D出口
+步行约700米至广州天河领展广场
+步行指引
+AZP
+领展厂场
+5号线潭村站D出口
+直行至瑞幸咖啡处右转
+右转后直行约500米到达
+NEWS
+TIANHE
+LINK PLAZA TIANHE
+快闪活动
+
+【第5张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+BUS公交
+出行
+可乘坐公交车辆前往以下站点，
+随后步行到达广州天河领展广场
+红线女中心站
+下车后步行约20米
+国防大厦站
+下车后步行约300米
+NEWS
+TIANHE
+快闪活动
+
+【第6张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+BUS公交
+出行
+可乘坐公交车辆前往以下站点，
+随后步行到达广州天河领展广场
+红线女中心站
+下车后步行约20米
+国防大厦站
+下车后步行约300米
+NEWS
+TIANHE
+LINK PLAZA TIANHE
+快闪活动
+
+【第7张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+U小飲x處存
+全国寄存平台
+发理身边的感存点8》
+扫孫登投丕望众
+SELF STORAGE
+NEWS
+TIANHE
+02
+03
+STORAGE 行李
+寄存
+然 金加 W小送田
+100-000-432
+0小飲田
+低至¥2/小时
+自肪存包柜
+B2 3号电梯大堂
+VIP会员专享
+限时免费寄存权益
+小珠雛
+05
+$8
+0 23 28
+0品
+1381
+im
+MM
+1111
+册斩会员
+柠包
+UNK PLAZNTIANFE
+快闪活动
+
+【第8张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+U小铁x超存
+全国寄存平台
+发现易边的密存点？）
+扫码宜找赛帘众
+SELF STORAGE
+NEWS
+TIANHE
+02
+03
+STORAGE 行李
+寄存
+然安金加U小 田
+0
+$00-000-634
+低至¥2/小时
+自助存包柜
+B2 3号电梯大堂
+VIP会员专享
+限时免费寄存权益
+小珠盤
+寄存
+05
+（⑧
+三助
+袍
+0 23 28
+扫码活
+册新会员
+免号
+黃存包
+LINK PLAZA TIANHE
+快闪活动
+
+【第9张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+STORACE 行李
+寄存
+直梯
+路线
+从西南门进入
+领展广场
+2
+直行至周大福荟馆旁
+3
+直行至3号电梯大堂
+乘坐直梯下至B2
+⑤
+G WLM UA8E
+到达行李寄存处
+全灣蕃存平台
+自助
+寄存
+SLEF STRJEE
+照
+扫码）
+渐会员
+希新存包
+NEWS
+TIANHE
+LINK PLAZATIANHE
+快闪活动
+
+【第10张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+STORAGE 行李
+寄存
+直梯
+路线
+从西南门进入
+PL
+颔茂广场
+A
+2
+直行至周大福荟馆旁
+3
+直行至3号电梯大堂
+乘坐直梯下至B2
+⑤
+到达行李寄存处
+自助
+袍包
+自助
+寄存
+NEWS
+TIANHE
+LNK PLAZATANHE
+快闪活动
+
+【第11张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+STORACE 行李
+寄存
+扶梯
+路线
+2
+从西南门进入
+UNK
+PLAZA
+领鹿广场
+乘坐中庭扶梯前往B1
+乘坐扶梯前往B2
+一
+直走即可到达行李寄存处
+NEWS
+TIANHE
+LNK PLAZATIANHE
+快闪活动
+
+【第12张图片中的文字内容】
+LINK
+PLAZA
+领展广场
+STORACE 行李
+寄存
+扶梯
+路线
+2
+从西南门进入
+食使乐100米
+PLAZA
+领展广场
+乘坐中庭扶梯前往B1
+sAMW®
+3
+乘坐扶梯前往B2
+直走即可到达行李寄存处
+NEWS
+TIANHE
+LINK PLAZA TIANHE
+快闪活动",,

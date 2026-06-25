@@ -53,18 +53,45 @@ const platformBusy = { xhs: false, dy: false };
 const platformBusyTask = { xhs: "", dy: "" };
 const localTaskActive = { xhs: false, dy: false };
 
-const filterState = {
-  sortBy: "综合",
-  noteType: "不限",
-  publishTime: "不限",
-  searchScope: "不限",
-  location: "不限",
+const FILTER_CONFIGS = {
+  xhs: [
+    { key: "sortBy", label: "排序依据", options: ["综合", "最新", "最多点赞", "最多评论", "最多收藏"] },
+    { key: "noteType", label: "笔记类型", options: ["不限", "视频", "图文"] },
+    { key: "publishTime", label: "发布时间", options: ["不限", "一天内", "一周内", "半年内"] },
+    { key: "searchScope", label: "搜索范围", options: ["不限", "已看过", "未看过", "已关注"] },
+    { key: "location", label: "位置距离", options: ["不限", "同城", "附近"] },
+  ],
+  dy: [
+    { key: "sortBy", label: "排序依据", options: ["综合排序", "最新发布", "最多点赞"] },
+    { key: "publishTime", label: "发布时间", options: ["不限", "一天内", "一周内", "半年内"] },
+    { key: "videoDuration", label: "视频时长", options: ["不限", "1分钟以下", "1-5分钟", "5分钟以上"] },
+    { key: "searchScope", label: "搜索范围", options: ["不限", "关注的人", "最近看过", "还未看过"] },
+    { key: "noteType", label: "内容形式", options: ["不限", "视频", "图文"] },
+  ],
+};
+
+const filterStateByPlatform = {
+  xhs: {
+    sortBy: "综合",
+    noteType: "不限",
+    publishTime: "不限",
+    searchScope: "不限",
+    location: "不限",
+  },
+  dy: {
+    sortBy: "综合排序",
+    noteType: "不限",
+    publishTime: "不限",
+    searchScope: "不限",
+    videoDuration: "不限",
+  },
 };
 
 const els = {
   brandMark: document.querySelector("#brandMark"),
   brandTitle: document.querySelector("#brandTitle"),
   platformButtons: document.querySelectorAll(".platform-option"),
+  visualizationJump: document.querySelector("#visualizationJump"),
   keywordGrid: document.querySelector("#keywordGrid"),
   keywordInput: document.querySelector("#keywordInput"),
   maxNotes: document.querySelector("#maxNotes"),
@@ -97,18 +124,28 @@ const els = {
   statusMessage: document.querySelector("#statusMessage"),
   runPill: document.querySelector("#runPill"),
   logOutput: document.querySelector("#logOutput"),
+  searchFilterPanel: document.querySelector("#searchFilterPanel"),
   filterGroups: document.querySelectorAll(".filter-group"),
   appendPathHint: document.querySelector("#appendPathHint"),
   searchPathHint: document.querySelector("#searchPathHint"),
   ampPathHint: document.querySelector("#ampPathHint"),
 };
 
+setupCrossLinks();
 renderKeywords();
 setDefaultAmpDates();
 bindEvents();
 updatePlatformUi();
 refreshBackendBusy();
 window.setInterval(refreshBackendBusy, 3000);
+
+function setupCrossLinks() {
+  const params = new URLSearchParams(window.location.search);
+  const visualizationUrl = params.get("visualization") || "http://127.0.0.1:8765/";
+  if (els.visualizationJump) {
+    els.visualizationJump.href = visualizationUrl;
+  }
+}
 
 function renderKeywords() {
   els.keywordGrid.innerHTML = "";
@@ -164,17 +201,6 @@ function bindEvents() {
   els.pasteCommentButton.addEventListener("click", pasteAndRunComments);
   els.cleanCurrentButton.addEventListener("click", () => runCleanData("current"));
   els.cleanAllButton.addEventListener("click", () => runCleanData("all"));
-  els.filterGroups.forEach((group) => {
-    const groupName = group.dataset.filterGroup;
-    group.querySelectorAll(".filter-option").forEach((button) => {
-      button.addEventListener("click", () => {
-        filterState[groupName] = button.dataset.value || button.textContent.trim();
-        group.querySelectorAll(".filter-option").forEach((item) => {
-          item.classList.toggle("is-active", item === button);
-        });
-      });
-    });
-  });
   els.openDirButton.addEventListener("click", async () => {
     await fetch("/api/open-dir", { method: "POST" });
   });
@@ -192,10 +218,53 @@ function updatePlatformUi() {
   els.brandMark.textContent = info.mark;
   els.brandTitle.textContent = info.brand;
   els.noteInput.placeholder = info.placeholder;
+  renderSearchFilters();
   els.appendPathHint.innerHTML = `全量字段追加到 <code>${info.origin}</code>，10 个监控字段追加到 <code>${info.table}</code>。评论数据追加到 <code>${info.comments}</code>。`;
   els.searchPathHint.textContent = `使用左侧「最多笔记」控制批量条数，0 表示不限制当前保守滚动可加载结果。${info.name}关键词搜索会使用可见 Chrome 慢速加载；所有结果同样追加到当前平台两张 Pipeline 总表。`;
   els.ampPathHint.innerHTML = `只允许 <code>正负向=正向</code> 的内容进入加热判断；按发布时间筛选当前平台总表，写入 <code>${info.workbook}</code> 对应月份 sheet。`;
   updateBusyUi();
+}
+
+function currentFilterState(platform = selectedPlatform) {
+  const key = normalizePlatformKey(platform);
+  return { ...(filterStateByPlatform[key] || filterStateByPlatform.xhs) };
+}
+
+function renderSearchFilters() {
+  const config = FILTER_CONFIGS[selectedPlatform] || FILTER_CONFIGS.xhs;
+  const state = filterStateByPlatform[selectedPlatform] || filterStateByPlatform.xhs;
+  els.searchFilterPanel.innerHTML = "";
+  config.forEach((group) => {
+    const section = document.createElement("div");
+    section.className = "filter-group";
+    section.dataset.filterGroup = group.key;
+
+    const label = document.createElement("p");
+    label.textContent = group.label;
+    section.appendChild(label);
+
+    const options = document.createElement("div");
+    options.className = "filter-options";
+    group.options.forEach((value, index) => {
+      if (!state[group.key]) {
+        state[group.key] = group.options[0];
+      }
+      const button = document.createElement("button");
+      button.className = "filter-option";
+      button.type = "button";
+      button.dataset.value = value;
+      button.textContent = value;
+      button.classList.toggle("is-active", state[group.key] === value || (!state[group.key] && index === 0));
+      button.addEventListener("click", () => {
+        state[group.key] = value;
+        renderSearchFilters();
+      });
+      options.appendChild(button);
+    });
+    section.appendChild(options);
+    els.searchFilterPanel.appendChild(section);
+  });
+  els.filterGroups = document.querySelectorAll(".filter-group");
 }
 
 function platformName(key) {
@@ -398,7 +467,7 @@ async function runSearch() {
     keyword,
     maxNotes: Number(els.maxNotes.value || 0),
     scrollRounds: Number(els.scrollRounds.value || 10),
-    ...filterState,
+    ...currentFilterState(selectedPlatform),
   });
 }
 
@@ -413,7 +482,10 @@ async function runSearchAll() {
     keyword,
     maxNotes: Number(els.maxNotes.value || 0),
     scrollRounds: Number(els.scrollRounds.value || 10),
-    ...filterState,
+    filtersByPlatform: {
+      xhs: currentFilterState("xhs"),
+      dy: currentFilterState("dy"),
+    },
   });
 }
 

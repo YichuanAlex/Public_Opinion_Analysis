@@ -1,0 +1,176 @@
+﻿source_url,note_id,xsec_source,items.0.id,items.0.model_type,items.0.note_card.ip_location,items.0.note_card.type,items.0.note_card.title,items.0.note_card.image_list.0.url,items.0.note_card.image_list.0.trace_id,items.0.note_card.image_list.0.info_list.0.url,items.0.note_card.image_list.0.info_list.0.image_scene,items.0.note_card.image_list.0.info_list.1.image_scene,items.0.note_card.image_list.0.info_list.1.url,items.0.note_card.image_list.0.live_photo,items.0.note_card.image_list.0.file_id,items.0.note_card.image_list.0.height,items.0.note_card.image_list.0.width,items.0.note_card.image_list.0.url_pre,items.0.note_card.image_list.0.url_default,items.0.note_card.image_list.0.stream,items.0.note_card.image_list.1.width,items.0.note_card.image_list.1.url,items.0.note_card.image_list.1.url_pre,items.0.note_card.image_list.1.stream,items.0.note_card.image_list.1.file_id,items.0.note_card.image_list.1.height,items.0.note_card.image_list.1.trace_id,items.0.note_card.image_list.1.info_list.0.image_scene,items.0.note_card.image_list.1.info_list.0.url,items.0.note_card.image_list.1.info_list.1.image_scene,items.0.note_card.image_list.1.info_list.1.url,items.0.note_card.image_list.1.url_default,items.0.note_card.image_list.1.live_photo,items.0.note_card.image_list.2.url_pre,items.0.note_card.image_list.2.stream,items.0.note_card.image_list.2.live_photo,items.0.note_card.image_list.2.file_id,items.0.note_card.image_list.2.height,items.0.note_card.image_list.2.width,items.0.note_card.image_list.2.trace_id,items.0.note_card.image_list.2.info_list.0.image_scene,items.0.note_card.image_list.2.info_list.0.url,items.0.note_card.image_list.2.info_list.1.image_scene,items.0.note_card.image_list.2.info_list.1.url,items.0.note_card.image_list.2.url,items.0.note_card.image_list.2.url_default,items.0.note_card.tag_list.0.id,items.0.note_card.tag_list.0.name,items.0.note_card.tag_list.0.type,items.0.note_card.tag_list.1.id,items.0.note_card.tag_list.1.name,items.0.note_card.tag_list.1.type,items.0.note_card.tag_list.2.id,items.0.note_card.tag_list.2.name,items.0.note_card.tag_list.2.type,items.0.note_card.tag_list.3.id,items.0.note_card.tag_list.3.name,items.0.note_card.tag_list.3.type,items.0.note_card.tag_list.4.id,items.0.note_card.tag_list.4.name,items.0.note_card.tag_list.4.type,items.0.note_card.tag_list.5.id,items.0.note_card.tag_list.5.name,items.0.note_card.tag_list.5.type,items.0.note_card.tag_list.6.id,items.0.note_card.tag_list.6.name,items.0.note_card.tag_list.6.type,items.0.note_card.at_user_list,items.0.note_card.time,items.0.note_card.last_update_time,items.0.note_card.share_info.un_share,items.0.note_card.note_id,items.0.note_card.desc,items.0.note_card.user.user_id,items.0.note_card.user.nickname,items.0.note_card.user.avatar,items.0.note_card.user.xsec_token,items.0.note_card.interact_info.comment_count,items.0.note_card.interact_info.share_count,items.0.note_card.interact_info.followed,items.0.note_card.interact_info.relation,items.0.note_card.interact_info.liked,items.0.note_card.interact_info.liked_count,items.0.note_card.interact_info.collected,items.0.note_card.interact_info.collected_count,current_time,cursor_score,raw_json,media_enrichment.image_count,media_enrichment.transcript_source_count,media_enrichment.image_ocr_text,media_enrichment.video_transcript,media_enrichment.errors
+https://www.xiaohongshu.com/discovery/item/6a2e8e4600000000080249c1?source=webshare&xhsshare=pc_web&xsec_token=ABpvgsd6kbQDYyTF6D_4QuJxK3z1X8_uTMuOuBwrWIuOM=&xsec_source=pc_share,6a2e8e4600000000080249c1,pc_share,6a2e8e4600000000080249c1,note,北京,normal,豆包真挺厉害的！现在出门打车一句话搞定,,,http://sns-webpic-qc.xhscdn.com/202606230909/b82eabe2697f27a2f2fcbf67ea68d43e/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_prv_wlteh_webp_3,WB_PRV,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606230909/9e0b3da3518913147352d394596e37de/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_dft_wlteh_webp_3,False,,4096,3072,http://sns-webpic-qc.xhscdn.com/202606230909/b82eabe2697f27a2f2fcbf67ea68d43e/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_prv_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606230909/9e0b3da3518913147352d394596e37de/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_dft_wlteh_webp_3,{},1260,,http://sns-webpic-qc.xhscdn.com/202606230909/2fb6f10dfe6ff721f5638a8445b47199/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_prv_wlteh_webp_3,{},,2691,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606230909/2fb6f10dfe6ff721f5638a8445b47199/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606230909/2873ea67b8a823f2d16f481db297bfd4/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_dft_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606230909/2873ea67b8a823f2d16f481db297bfd4/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_dft_wlteh_webp_3,False,http://sns-webpic-qc.xhscdn.com/202606230909/d4bbe4b7b0a9bca104371261a5cbdab1/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_prv_wlteh_webp_3,{},False,,2844,1260,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606230909/d4bbe4b7b0a9bca104371261a5cbdab1/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606230909/1134b7282c587f00f134169c2c43da5d/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_dft_wlteh_webp_3,,http://sns-webpic-qc.xhscdn.com/202606230909/1134b7282c587f00f134169c2c43da5d/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_dft_wlteh_webp_3,5e7bdcb70000000001002486,日常出行,topic,6110950d0000000001006726,打车攻略,topic,5d664a4e0000000002002c82,北京出行,topic,5c8a30e2000000000f01d784,日常通勤,topic,5bea43bee5735b0001819ca3,周末出行,topic,601504e4000000000100a189,曹操出行,topic,6a27d37b0000000006011a9e,豆包打车,topic,[],1781435974000,1781435974000,False,6a2e8e4600000000080249c1,"家里人多，上有老下有小，每次打车🚗 都手忙脚乱的
+	
+现在好了，对着豆包说一声去哪儿，没想到直接就能叫到曹操出行
+	
+上车前还能提前调好车里温度🌡️、换气，特别智能
+	
+孩子👶🏻和老人坐着也舒服，这种打车跟AI联动的功能，真心方便
+	
+#日常出行[话题]##打车攻略[话题]##北京出行[话题]##日常通勤[话题]##周末出行[话题]##曹操出行[话题]##豆包打车[话题]#",5b3b117d11be101ce15282df,lulu小妖精👿,https://sns-avatar-qc.xhscdn.com/avatar/5f9ebefddf66590001079701.jpg,ABnVdacoADyFSsDJ5dZCztXuNnUdRj-GqQkgoLOqbY8hY=,18,33,False,none,False,345,False,33,1782176994409,,"{""items"":[{""id"":""6a2e8e4600000000080249c1"",""model_type"":""note"",""note_card"":{""ip_location"":""北京"",""type"":""normal"",""title"":""豆包真挺厉害的！现在出门打车一句话搞定"",""image_list"":[{""url"":"""",""trace_id"":"""",""info_list"":[{""url"":""http://sns-webpic-qc.xhscdn.com/202606230909/b82eabe2697f27a2f2fcbf67ea68d43e/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_prv_wlteh_webp_3"",""image_scene"":""WB_PRV""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606230909/9e0b3da3518913147352d394596e37de/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_dft_wlteh_webp_3""}],""live_photo"":false,""file_id"":"""",""height"":4096,""width"":3072,""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606230909/b82eabe2697f27a2f2fcbf67ea68d43e/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_prv_wlteh_webp_3"",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606230909/9e0b3da3518913147352d394596e37de/notes_pre_post/1040g3k8321d531rn7a004a6prb8nr0mvpubntao!nd_dft_wlteh_webp_3"",""stream"":{}},{""width"":1260,""url"":"""",""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606230909/2fb6f10dfe6ff721f5638a8445b47199/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_prv_wlteh_webp_3"",""stream"":{},""file_id"":"""",""height"":2691,""trace_id"":"""",""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606230909/2fb6f10dfe6ff721f5638a8445b47199/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606230909/2873ea67b8a823f2d16f481db297bfd4/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_dft_wlteh_webp_3""}],""url_default"":""http://sns-webpic-qc.xhscdn.com/202606230909/2873ea67b8a823f2d16f481db297bfd4/notes_pre_post/1040g3k0321d532017e004a6prb8nr0mvgussjuo!nd_dft_wlteh_webp_3"",""live_photo"":false},{""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606230909/d4bbe4b7b0a9bca104371261a5cbdab1/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_prv_wlteh_webp_3"",""stream"":{},""live_photo"":false,""file_id"":"""",""height"":2844,""width"":1260,""trace_id"":"""",""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606230909/d4bbe4b7b0a9bca104371261a5cbdab1/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606230909/1134b7282c587f00f134169c2c43da5d/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_dft_wlteh_webp_3""}],""url"":"""",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606230909/1134b7282c587f00f134169c2c43da5d/notes_pre_post/1040g3k8321d532ajno004a6prb8nr0mvibev168!nd_dft_wlteh_webp_3""}],""tag_list"":[{""id"":""5e7bdcb70000000001002486"",""name"":""日常出行"",""type"":""topic""},{""id"":""6110950d0000000001006726"",""name"":""打车攻略"",""type"":""topic""},{""id"":""5d664a4e0000000002002c82"",""name"":""北京出行"",""type"":""topic""},{""id"":""5c8a30e2000000000f01d784"",""name"":""日常通勤"",""type"":""topic""},{""id"":""5bea43bee5735b0001819ca3"",""name"":""周末出行"",""type"":""topic""},{""id"":""601504e4000000000100a189"",""name"":""曹操出行"",""type"":""topic""},{""id"":""6a27d37b0000000006011a9e"",""name"":""豆包打车"",""type"":""topic""}],""at_user_list"":[],""time"":1781435974000,""last_update_time"":1781435974000,""share_info"":{""un_share"":false},""note_id"":""6a2e8e4600000000080249c1"",""desc"":""家里人多，上有老下有小，每次打车🚗 都手忙脚乱的\n\t\n现在好了，对着豆包说一声去哪儿，没想到直接就能叫到曹操出行\n\t\n上车前还能提前调好车里温度🌡️、换气，特别智能\n\t\n孩子👶🏻和老人坐着也舒服，这种打车跟AI联动的功能，真心方便\n\t\n#日常出行[话题]##打车攻略[话题]##北京出行[话题]##日常通勤[话题]##周末出行[话题]##曹操出行[话题]##豆包打车[话题]#"",""user"":{""user_id"":""5b3b117d11be101ce15282df"",""nickname"":""lulu小妖精👿"",""avatar"":""https://sns-avatar-qc.xhscdn.com/avatar/5f9ebefddf66590001079701.jpg"",""xsec_token"":""ABnVdacoADyFSsDJ5dZCztXuNnUdRj-GqQkgoLOqbY8hY=""},""interact_info"":{""comment_count"":""18"",""share_count"":""33"",""followed"":false,""relation"":""none"",""liked"":false,""liked_count"":""345"",""collected"":false,""collected_count"":""33""}}}],""current_time"":1782176994409,""cursor_score"":""""}",6,0,"【第1张图片中的文字内容】
+事11大 益
+（三與便面
+10z.
+4g5
+101
+
+【第2张图片中的文字内容】
+扫码成为曹操会员
+尊享11大权益
+打车更便宜
+澱单更优先
+空 更宽限
+扫股一错铁取：
+107元 例领前人料S
+68
+商城15元
+0.99k
+元先门健料
+×××
+× ×
+1007
+
+【第3张图片中的文字内容】
+豆包
+AI 生成可能有误 请核实
+我要打车到招商银行大望路支行
+好的，已为您选定上车点为「松榆宿屋酒店（北
+京工业大学潘家园地铁站店）」，终点为「招商
+银行（北京建国路支行）」。
+全程约2.8公里，预计需要17分钟。目前有多
+种车型可选，其中“惠选”价格最优惠，预估
+17.4元。
+您可以查看下方的卡片选择具体车型，需要我
+帮您下单吗？
+C 曹操出行
+柒1少天街
+首都实业西侧
+起
+北京工业大学
+崧榆宿屋酒店（北京工
+业大学潘家园地铁站⋯
+公側開始
+预估 17.4~20.5元
+已选3 种车型
+四~G1-朝
+确认叫车
+快速
+买前问豆包
+AI创作
+Q豆包 PE
+发消息或按住说话…
+⑨
+
+【第4张图片中的文字内容】
+豆包〉
+AI 生成可能有误 请核实
+我要打车到招商银行大望路支行
+好的，已为您选定上车点为「松榆宿屋酒店（北
+京工业大学潘家园地铁站店）」，终点为「招商
+银行（北京建国路支行）」。
+全程约2.8公里，预计需要17分钟。目前有多
+种车型可选，其中“惠选”价格最优惠，预估
+17.4元。
+您可以查看下方的卡片选择具体车型，需要我
+帮您下单吗？
+C 曹操出行
+柒门少天街
+◎
+首都实业西侧
+起
+元京工业大学
+松榆宿屋酒店（北京工
+业大学潘家园地铁站.
+側哈
+预估 17.4~20.5元
+已选3种车型
+东
+四Q
+二G一1=朝
+确认叫车
+快速
+山 买前问豆包
+个AI创作
+母豆包P
+发消息或按住说话⋯
++
+
+【第5张图片中的文字内容】
+汤杉
+8:37
+顺迈金钻国际
+商务中心
+个
+司机正在赶来接你
+棵杨56号院
+alsG
+土区
+富顿中心
+劲松街道办事处
+一乐澜宝邸=
+华腾北，
+商务大
+劲松大厦
+大厦
+大厦
+C
+南磨房路辅路
+农光里北一陰
+司机已接单
+司机正在赶来，请留意车辆..
+农光路
+客隆商务
+农光里南院
+农光东里社区（西3门）
+农光里
+饭店
+农光南里
+武圣西理
+松榆北路3号院
+建死
+建业写字楼
+司机正在赶来京BDD2258
+佟师傅 智能大白车 吉利曹操60 白色
+联系司机
+取消订单
+
+【第6张图片中的文字内容】
+汤松
+士区
+大厦
+大厦
+8:37
+顺迈金钻国际
+商务中心
+个
+司机正在赶来接你
+棵杨56号院
+劲松街道办事处
+富顿中心
+劲松大厦
+C
+-乐澜宝邸
+南磨房路辅路
+农光里北一陰
+司机已接单
+司机正在赶来，请留意车辆.
+农光路
+农光里南院
+94
+华腾北
+商务大
+客隆商务
+起
+农光东里社区（西3门）
+农光里
+饭店
+农光南里
+武圣西里
+紫东苑
+松榆北路3号院
+建业苑
+建业写字楼
+司机正在赶来.京BDD2258
+佟师傅 智能大白车 吉利曹操60 白色
+联系司机
+取消订单",,

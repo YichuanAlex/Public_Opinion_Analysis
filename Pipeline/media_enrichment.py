@@ -5,8 +5,10 @@ import json
 import mimetypes
 import os
 import re
+import site
 import shutil
 import subprocess
+import sys
 import time
 import urllib.parse
 import urllib.request
@@ -73,6 +75,44 @@ def path_text(path: tuple[str, ...]) -> str:
     return ".".join(path).lower()
 
 
+def is_auxiliary_media_path(text: str) -> bool:
+    return any(token in text for token in (
+        "author.",
+        "avatar",
+        "music.",
+        "share_qrcode",
+        "qrcode",
+        "big_thumbs",
+        "gaussian_cover",
+        "dynamic_cover",
+    ))
+
+
+def ensure_user_site_packages() -> None:
+    version_tag = f"{sys.version_info.major}.{sys.version_info.minor}"
+
+    def compatible(candidate: Path) -> bool:
+        text = str(candidate).lower()
+        versions = re.findall(r"python[/\\]?(\d+\.\d+)", text)
+        return not versions or version_tag in versions
+
+    candidates: list[Path] = []
+    try:
+        candidates.append(Path(site.getusersitepackages()))
+    except Exception:
+        pass
+    try:
+        candidates.extend(Path(item) for item in site.getsitepackages())
+    except Exception:
+        pass
+    candidates.extend(Path.home().glob("Library/Python/*/lib/python/site-packages"))
+    candidates.extend(Path.home().glob(".local/lib/python*/site-packages"))
+    for candidate in candidates:
+        text = str(candidate)
+        if candidate.exists() and compatible(candidate) and text not in sys.path:
+            sys.path.insert(0, text)
+
+
 def url_ext(url: str) -> str:
     parsed = urllib.parse.urlparse(url)
     ext = Path(parsed.path).suffix.lower()
@@ -84,9 +124,13 @@ def url_ext(url: str) -> str:
 
 def looks_like_image(url: str, path: tuple[str, ...]) -> bool:
     text = path_text(path)
+    if is_auxiliary_media_path(text):
+        return False
+    if ".video." in text or text.startswith("video."):
+        return False
     if "avatar" in text or "user" in text and "cover" not in text:
         return False
-    if any(token in text for token in ("image_list", "images", "cover", "origin_cover", "dynamic_cover")):
+    if any(token in text for token in ("image_list", "images", "note_card.image_list", "origin_cover", "cover")):
         return True
     ext = url_ext(url)
     return ext in IMAGE_EXTS and any(host in url for host in ("xhscdn", "douyinpic", "douyincdn"))
@@ -103,9 +147,13 @@ def looks_like_audio(url: str, path: tuple[str, ...]) -> bool:
 
 def looks_like_video(url: str, path: tuple[str, ...]) -> bool:
     text = path_text(path)
-    if "cover" in text or "image" in text or "avatar" in text:
+    if is_auxiliary_media_path(text):
         return False
-    if any(token in text for token in ("video", "stream", "play_addr", "download_addr")):
+    if "cover" in text or "avatar" in text:
+        return False
+    if any(token in text for token in ("play_addr", "download_addr")) and (".video." in text or text.startswith("video.") or "stream" in text):
+        return True
+    if "video" in text and any(token in text for token in ("url_list", "uri", "stream")) and "image" not in text:
         return True
     return url_ext(url) in VIDEO_EXTS
 
@@ -211,7 +259,11 @@ def local_faster_whisper_model() -> Path:
 
 def transcribe_audio(audio_path: Path) -> str:
     try:
-        from faster_whisper import WhisperModel  # type: ignore
+        try:
+            from faster_whisper import WhisperModel  # type: ignore
+        except Exception:
+            ensure_user_site_packages()
+            from faster_whisper import WhisperModel  # type: ignore
     except Exception as exc:
         raise RuntimeError(
             "未安装 faster-whisper。请运行 `python3 -m pip install -r requirements.txt` 后重试。"

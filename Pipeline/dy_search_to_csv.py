@@ -55,12 +55,20 @@ PRESET_KEYWORDS = [
 ]
 DEFAULT_KEYWORD = PRESET_KEYWORDS[0]
 
-SORT_OPTIONS = ["综合", "最新", "最多点赞", "最多评论", "最多收藏"]
+SORT_OPTIONS = ["综合排序", "最新发布", "最多点赞"]
 NOTE_TYPE_OPTIONS = ["不限", "视频", "图文"]
 PUBLISH_TIME_OPTIONS = ["不限", "一天内", "一周内", "半年内"]
-SEARCH_SCOPE_OPTIONS = ["不限", "已看过", "未看过", "已关注"]
+VIDEO_DURATION_OPTIONS = ["不限", "1分钟以下", "1-5分钟", "5分钟以上"]
+SEARCH_SCOPE_OPTIONS = ["不限", "关注的人", "最近看过", "还未看过"]
 LOCATION_OPTIONS = ["不限", "同城", "附近"]
 PUBLISH_TIME_DAYS = {"一天内": 1, "一周内": 7, "半年内": 183}
+SORT_ALIASES = {"综合": "综合排序", "最新": "最新发布", "最多评论": "综合排序", "最多收藏": "综合排序"}
+SEARCH_SCOPE_ALIASES = {"已关注": "关注的人", "已看过": "最近看过", "未看过": "还未看过"}
+SORT_TYPE = {"综合排序": 0, "最多点赞": 1, "最新发布": 2}
+PUBLISH_TIME_CODE = {"不限": 0, "一天内": 1, "一周内": 7, "半年内": 180}
+VIDEO_DURATION_CODE = {"不限": 0, "1分钟以下": 1, "1-5分钟": 2, "5分钟以上": 3}
+SEARCH_SCOPE_CODE = {"不限": 0, "关注的人": 1, "最近看过": 2, "还未看过": 3}
+CONTENT_TYPE_CODE = {"不限": 0, "视频": 1, "图文": 2}
 
 
 def build_search_url(keyword: str) -> str:
@@ -78,8 +86,10 @@ def candidate_search_urls(value: str) -> List[str]:
     ]
 
 
-def normalize_choice(value: str, allowed: List[str], default: str) -> str:
+def normalize_choice(value: str, allowed: List[str], default: str, aliases: Optional[Dict[str, str]] = None) -> str:
     clean = str(value or "").strip()
+    if aliases and clean in aliases:
+        clean = aliases[clean]
     return clean if clean in allowed else default
 
 
@@ -218,9 +228,131 @@ def collect_search_items(
     return list(collected.values())
 
 
+def iter_dicts(value: Any) -> Iterable[Dict[str, Any]]:
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from iter_dicts(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from iter_dicts(child)
+
+
+def aweme_info_from_node(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    for key in ("aweme_info", "aweme_detail", "aweme", "item"):
+        child = node.get(key)
+        if isinstance(child, dict) and child.get("aweme_id"):
+            return child
+    if node.get("aweme_id") and any(key in node for key in ("desc", "author", "statistics", "create_time")):
+        return node
+    return None
+
+
+def preview_title_from_aweme(info: Dict[str, Any]) -> str:
+    text = re.sub(r"\s+", " ", str(info.get("desc") or info.get("caption") or "")).strip()
+    if not text:
+        return ""
+    first = re.split(r"[。！？!?\\n]", text, maxsplit=1)[0].strip()
+    return (first or text)[:80]
+
+
+def search_items_from_api_data(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    items: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+    for node in iter_dicts(data):
+        info = aweme_info_from_node(node)
+        if not info:
+            continue
+        aweme_id = str(info.get("aweme_id") or "").strip()
+        if not aweme_id or aweme_id in seen:
+            continue
+        seen.add(aweme_id)
+        author = info.get("author") if isinstance(info.get("author"), dict) else {}
+        href = str(info.get("share_url") or "") or dy.canonical_aweme_url(aweme_id)
+        items.append({
+            "id": aweme_id,
+            "href": href,
+            "preview_title": preview_title_from_aweme(info),
+            "preview_author": str(author.get("nickname") or ""),
+            "preview_text": str(info.get("desc") or "")[:1200],
+            "aweme_info": info,
+        })
+    return items
+
+
+def search_api_params(keyword: str, cursor: int, count: int, filters: Dict[str, str]) -> Dict[str, Any]:
+    return {
+        "keyword": keyword,
+        "offset": cursor,
+        "count": count,
+        "search_channel": "aweme_general",
+        "search_source": "normal_search",
+        "query_correct_type": 1,
+        "is_filter_search": int(any(
+            filters.get(key) not in ("", "不限", "综合排序")
+            for key in ("sort_by", "note_type", "publish_time", "search_scope", "video_duration")
+        )),
+        "sort_type": SORT_TYPE.get(filters.get("sort_by", "综合排序"), 0),
+        "publish_time": PUBLISH_TIME_CODE.get(filters.get("publish_time", "不限"), 0),
+        "filter_duration": VIDEO_DURATION_CODE.get(filters.get("video_duration", "不限"), 0),
+        "content_type": CONTENT_TYPE_CODE.get(filters.get("note_type", "不限"), 0),
+        "search_range": SEARCH_SCOPE_CODE.get(filters.get("search_scope", "不限"), 0),
+        "from_group_id": "",
+        "pc_client_type": 1,
+    }
+
+
+def collect_search_items_via_api(
+    page: dy.browser.CdpClient,
+    keyword: str,
+    search_url: str,
+    filters: Dict[str, str],
+    scroll_rounds: int,
+    max_items: int,
+    request_interval: float,
+    http_timeout: float,
+) -> List[Dict[str, Any]]:
+    collected: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+    cursor = 0
+    count = 12
+    rounds = max(1, scroll_rounds)
+    for round_index in range(rounds):
+        data = dy.browser_fetch_json(
+            page,
+            "/aweme/v1/web/general/search/single/",
+            search_api_params(keyword, cursor, count, filters),
+            timeout=http_timeout,
+        )
+        before = len(collected)
+        for item in search_items_from_api_data(data):
+            aweme_id = item.get("id", "")
+            if not aweme_id or aweme_id in collected:
+                continue
+            item["search_url"] = search_url
+            item["search_rank"] = str(len(collected) + 1)
+            item["detail_source"] = "search_api"
+            collected[str(aweme_id)] = item
+            if max_items > 0 and len(collected) >= max_items:
+                return list(collected.values())
+        cursor_value = data.get("cursor") or data.get("offset") or data.get("next_offset")
+        try:
+            cursor = int(cursor_value)
+        except Exception:
+            cursor += count
+        has_more = data.get("has_more")
+        if len(collected) == before and not has_more:
+            break
+        if has_more in (0, False, "0", "false", "False") and round_index > 0:
+            break
+        time.sleep(max(0.5, request_interval))
+    return list(collected.values())
+
+
 def media_type(row: Dict[str, Any]) -> str:
     raw = str(dy.pick(row, "aweme_detail.media_type"))
-    return "图文" if raw == "2" else "视频"
+    if raw == "2" or dy.pick(row, "aweme_detail.images.0.uri", "aweme_detail.images.0.url_list.0"):
+        return "图文"
+    return "视频"
 
 
 def publish_timestamp(row: Dict[str, Any]) -> float:
@@ -237,6 +369,17 @@ def numeric(row: Dict[str, Any], key: str) -> int:
         return 0
 
 
+def duration_seconds(row: Dict[str, Any]) -> float:
+    value = dy.pick(row, "aweme_detail.duration", "aweme_detail.video.duration")
+    try:
+        seconds = float(value)
+    except Exception:
+        return 0.0
+    if seconds > 1000:
+        seconds = seconds / 1000
+    return seconds
+
+
 def matches_publish_time(row: Dict[str, Any], publish_time: str) -> bool:
     if publish_time == "不限":
         return True
@@ -249,6 +392,21 @@ def matches_publish_time(row: Dict[str, Any], publish_time: str) -> bool:
     return datetime.fromtimestamp(timestamp) >= datetime.now() - timedelta(days=days)
 
 
+def matches_video_duration(row: Dict[str, Any], video_duration: str) -> bool:
+    if video_duration == "不限":
+        return True
+    seconds = duration_seconds(row)
+    if seconds <= 0:
+        return False
+    if video_duration == "1分钟以下":
+        return seconds < 60
+    if video_duration == "1-5分钟":
+        return 60 <= seconds <= 300
+    if video_duration == "5分钟以上":
+        return seconds > 300
+    return True
+
+
 def apply_filters_and_sort(rows: List[OrderedDict], filters: Dict[str, str], max_notes: int) -> List[OrderedDict]:
     filtered = []
     for row in rows:
@@ -256,10 +414,12 @@ def apply_filters_and_sort(rows: List[OrderedDict], filters: Dict[str, str], max
             continue
         if not matches_publish_time(row, filters["publish_time"]):
             continue
+        if not matches_video_duration(row, filters.get("video_duration", "不限")):
+            continue
         filtered.append(row)
 
     sort_by = filters["sort_by"]
-    if sort_by == "最新":
+    if sort_by == "最新发布":
         filtered.sort(key=publish_timestamp, reverse=True)
     elif sort_by == "最多点赞":
         filtered.sort(key=lambda row: numeric(row, "aweme_detail.statistics.digg_count"), reverse=True)
@@ -279,7 +439,7 @@ def build_origin_rows(
     page: dy.browser.CdpClient,
     keyword: str,
     search_url: str,
-    items: List[Dict[str, str]],
+    items: List[Dict[str, Any]],
     filters: Dict[str, str],
     request_interval: float,
     http_timeout: float,
@@ -291,7 +451,11 @@ def build_origin_rows(
             time.sleep(max(0.0, request_interval))
         aweme_id = item["id"]
         try:
-            detail = dy.fetch_aweme_detail(page, aweme_id, http_timeout)
+            embedded = item.get("aweme_info")
+            if isinstance(embedded, dict):
+                detail = {"aweme_detail": embedded}
+            else:
+                detail = dy.fetch_aweme_detail(page, aweme_id, http_timeout)
             flat = dy.build_flat_row(detail, item.get("href", ""), aweme_id)
             if media_enrich:
                 flat = enrich_flat_row("dy", flat)
@@ -312,6 +476,8 @@ def build_origin_rows(
         prefix["filter_publish_time"] = filters["publish_time"]
         prefix["filter_search_scope"] = filters["search_scope"]
         prefix["filter_location"] = filters["location"]
+        prefix["filter_video_duration"] = filters.get("video_duration", "不限")
+        prefix["detail_source"] = item.get("detail_source", "")
         prefix["preview_title"] = item.get("preview_title", "")
         prefix["preview_author"] = item.get("preview_author", "")
         prefix["preview_text"] = item.get("preview_text", "")
@@ -328,13 +494,18 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
     output = Path(args.output) if args.output else DY_ORIGIN_CSV
     summary_output = Path(args.summary_output) if args.summary_output else DY_SUMMARY_CSV
     filters = {
-        "sort_by": normalize_choice(args.sort_by, SORT_OPTIONS, "综合"),
+        "sort_by": normalize_choice(args.sort_by, SORT_OPTIONS, "综合排序", SORT_ALIASES),
         "note_type": normalize_choice(args.note_type, NOTE_TYPE_OPTIONS, "不限"),
         "publish_time": normalize_choice(args.publish_time, PUBLISH_TIME_OPTIONS, "不限"),
-        "search_scope": normalize_choice(args.search_scope, SEARCH_SCOPE_OPTIONS, "不限"),
+        "search_scope": normalize_choice(args.search_scope, SEARCH_SCOPE_OPTIONS, "不限", SEARCH_SCOPE_ALIASES),
         "location": normalize_choice(args.location, LOCATION_OPTIONS, "不限"),
+        "video_duration": normalize_choice(args.video_duration, VIDEO_DURATION_OPTIONS, "不限"),
     }
-    local_filter_active = filters["note_type"] != "不限" or filters["publish_time"] != "不限"
+    local_filter_active = (
+        filters["note_type"] != "不限"
+        or filters["publish_time"] != "不限"
+        or filters["video_duration"] != "不限"
+    )
     collect_limit = args.max_notes
     if args.max_notes > 0 and local_filter_active:
         collect_limit = max(args.max_notes * 4, args.max_notes + 20)
@@ -347,6 +518,7 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
         search_url = search_urls[0]
         for index, candidate_url in enumerate(search_urls, start=1):
             search_url = candidate_url
+            search_api_error = ""
             items = collect_search_items(
                 page,
                 candidate_url,
@@ -356,10 +528,26 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
                 max_items=collect_limit,
                 load_timeout=args.search_load_timeout,
             )
+            if not items:
+                try:
+                    items = collect_search_items_via_api(
+                        page,
+                        keyword,
+                        candidate_url,
+                        filters,
+                        scroll_rounds=args.scroll_rounds,
+                        max_items=collect_limit,
+                        request_interval=args.request_interval,
+                        http_timeout=args.http_timeout,
+                    )
+                except Exception as exc:
+                    search_api_error = str(exc)
             diagnostic = dy.page_diagnostics(page)
             diagnostic["candidate_url"] = candidate_url
             diagnostic["candidate_index"] = index
             diagnostic["extracted_count"] = len(items)
+            if search_api_error:
+                diagnostic["search_api_error"] = search_api_error
             diagnostics.append(diagnostic)
             if items:
                 break
@@ -371,6 +559,8 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
                 if last.get("hasLoginText"):
                     detail += " 页面疑似出现登录/验证/安全提示，请在打开的抖音页面完成登录或验证后重试。"
                 detail += f" 最后页面标题：{last.get('title', '')}；链接数：{last.get('linkCount', 0)}。"
+                if last.get("search_api_error"):
+                    detail += f" 搜索接口兜底失败：{last.get('search_api_error')}。"
             if debug_files:
                 detail += " 已保存诊断文件：" + "，".join(debug_files.values())
             raise RuntimeError(detail)
@@ -400,6 +590,7 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
                 "source_url",
                 "note_id",
                 "aweme_id",
+                "detail_source",
                 "preview_title",
                 "preview_author",
                 "fetch_error",
@@ -418,11 +609,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("-o", "--output", help="Full-field CSV path. Defaults to Pipeline/dy_origin_data.csv.")
     parser.add_argument("--summary-output", help="10-field CSV path. Defaults to Pipeline/dy_note_10_fields.csv.")
     parser.add_argument("--max-notes", type=int, default=0, help="Maximum videos/notes to fetch. 0 means no cap.")
-    parser.add_argument("--sort-by", choices=SORT_OPTIONS, default="综合")
+    parser.add_argument("--sort-by", choices=SORT_OPTIONS + list(SORT_ALIASES.keys()), default="综合排序")
     parser.add_argument("--note-type", choices=NOTE_TYPE_OPTIONS, default="不限")
     parser.add_argument("--publish-time", choices=PUBLISH_TIME_OPTIONS, default="不限")
-    parser.add_argument("--search-scope", choices=SEARCH_SCOPE_OPTIONS, default="不限")
+    parser.add_argument("--search-scope", choices=SEARCH_SCOPE_OPTIONS + list(SEARCH_SCOPE_ALIASES.keys()), default="不限")
     parser.add_argument("--location", choices=LOCATION_OPTIONS, default="不限")
+    parser.add_argument("--video-duration", choices=VIDEO_DURATION_OPTIONS, default="不限")
     parser.add_argument("--scroll-rounds", type=int, default=10)
     parser.add_argument("--stable-rounds", type=int, default=3)
     parser.add_argument("--scroll-delay", type=float, default=2.8)

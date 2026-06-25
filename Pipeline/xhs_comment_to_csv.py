@@ -309,7 +309,20 @@ def write_comments_csv(rows: List[OrderedDict], output_path: Path) -> None:
 
 
 def run(args: argparse.Namespace) -> Tuple[Path, int]:
-    note_id, _, xsec_token = note_exporter.parse_note_url(args.url)
+    note_url = note_exporter.extract_note_url(args.url)
+    note_id, xsec_source, xsec_token = note_exporter.parse_note_url(note_url)
+    if not xsec_token:
+        cached_url = note_exporter.cached_tokenized_url(note_id)
+        if cached_url:
+            cached_id, cached_source, cached_token = note_exporter.parse_note_url(cached_url)
+            if cached_id == note_id and cached_token:
+                note_url = cached_url
+                xsec_source = cached_source or xsec_source
+                xsec_token = cached_token
+                print(
+                    f"已从本地历史数据为小红书评论爬取补齐 xsec_token，note_id={note_id}",
+                    flush=True,
+                )
     output = Path(args.output) if args.output else Path(__file__).with_name("xhs_comments.csv")
 
     chrome_path = note_exporter.find_chrome(args.chrome)
@@ -331,18 +344,27 @@ def run(args: argparse.Namespace) -> Tuple[Path, int]:
     try:
         port, ws_path = note_exporter.wait_for_debug_port(user_dir, args.browser_timeout)
         page = note_exporter.make_page_client(port, ws_path, args.browser_timeout)
-        note_exporter.wait_for_page_signer(page, args.url, args.browser_timeout)
+        note_exporter.wait_for_page_signer(page, note_url, args.browser_timeout)
         state = note_exporter.wait_for_login_cookie(page, note_exporter.page_state(page), args.login_timeout)
         state["cookie_header"] = note_exporter.browser_cookie_header(page)
         if not state.get("a1") or not state.get("cookie_header"):
             raise RuntimeError("未检测到完整小红书登录 Cookie，请先登录小红书后重试。")
+        access = note_exporter.resolve_note_access_from_page(
+            page,
+            note_id,
+            xsec_source,
+            xsec_token,
+            args.browser_timeout,
+        )
+        xsec_token = access.get("xsec_token") or xsec_token
+        note_url = access.get("href") or note_url
 
         rows = collect_comments(
             page,
             state,
             note_id,
             xsec_token,
-            args.url,
+            note_url,
             limit=args.limit,
             request_interval=args.request_interval,
             http_timeout=args.http_timeout,

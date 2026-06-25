@@ -20,6 +20,7 @@ import hashlib
 import json
 import os
 import random
+import re
 import shutil
 import socket
 import ssl
@@ -36,7 +37,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from media_enrichment import append_media_text, enrich_flat_row
-from pipeline_paths import XHS_ORIGIN_CSV, XHS_SUMMARY_CSV
+from pipeline_paths import XHS_DATA_TABLE_CSV, XHS_ORIGIN_CSV, XHS_SUMMARY_CSV
 
 
 DEFAULT_URL = (
@@ -201,7 +202,29 @@ class CdpClient:
         return remote.get("value")
 
 
+XHS_NOTE_URL_RE = re.compile(
+    r"https?://(?:www\.)?xiaohongshu\.com/(?:discovery/item|explore|search_result)/[^\s，。！？,，）)】\]]+"
+)
+
+
+def extract_note_url(value: str) -> str:
+    text = (
+        str(value or "")
+        .replace("&amp;", "&")
+        .replace("\\u002F", "/")
+        .replace("\\/", "/")
+        .replace("\\u003F", "?")
+        .replace("\\u003D", "=")
+        .replace("\\u0026", "&")
+    )
+    match = XHS_NOTE_URL_RE.search(text)
+    if match:
+        return match.group(0).rstrip("。；;，,）)】]")
+    return text.strip().rstrip("。；;，,）)】]")
+
+
 def parse_note_url(url: str) -> Tuple[str, str, str]:
+    url = extract_note_url(url)
     parsed = urllib.parse.urlparse(url)
     note_id = parsed.path.rstrip("/").split("/")[-1]
     if len(note_id) != 24 or not note_id.isalnum():
@@ -209,11 +232,49 @@ def parse_note_url(url: str) -> Tuple[str, str, str]:
     params = urllib.parse.parse_qs(parsed.query)
     xsec_token = (params.get("xsec_token") or [""])[0]
     xsec_source = (params.get("xsec_source") or [""])[0]
-    if not xsec_token:
-        raise ValueError("URL is missing xsec_token")
     if not xsec_source:
-        raise ValueError("URL is missing xsec_source")
+        xsec_source = "pc_search"
     return note_id, xsec_source, xsec_token
+
+
+def cached_tokenized_url(note_id: str) -> str:
+    if not note_id:
+        return ""
+    pattern = re.compile(
+        rf"https?://(?:www\.)?xiaohongshu\.com/(?:discovery/item|explore|search_result)/{re.escape(note_id)}[^\s\"'<>]*xsec_token=[^\s\"'<>]+",
+        re.I,
+    )
+    for path in (XHS_ORIGIN_CSV, XHS_DATA_TABLE_CSV):
+        if not path.exists() or path.stat().st_size == 0:
+            continue
+        try:
+            with path.open("r", encoding="utf-8-sig", newline="") as handle:
+                reader = csv.DictReader(handle)
+                for row in reader:
+                    values = "\n".join(str(value or "") for value in row.values())
+                    values = (
+                        values.replace("&amp;", "&")
+                        .replace("\\u0026", "&")
+                        .replace("\\/", "/")
+                        .replace("\\u003F", "?")
+                        .replace("\\u003D", "=")
+                    )
+                    match = pattern.search(values)
+                    if match:
+                        return match.group(0).rstrip("。；;，,）)】]}")
+        except Exception:
+            continue
+    return ""
+
+
+def with_url_query(url: str, **updates: str) -> str:
+    parsed = urllib.parse.urlparse(url)
+    params = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+    for key, value in updates.items():
+        if value:
+            params[key] = [value]
+    query = urllib.parse.urlencode(params, doseq=True)
+    return urllib.parse.urlunparse(parsed._replace(query=query))
 
 
 def find_chrome(explicit: Optional[str]) -> str:
@@ -393,6 +454,86 @@ def page_state(page: CdpClient) -> Dict[str, Any]:
 })()
 """
     return page.evaluate(expression)
+
+
+def resolve_note_access_from_page(
+    page: CdpClient,
+    note_id: str,
+    fallback_source: str,
+    fallback_token: str,
+    timeout: float,
+) -> Dict[str, str]:
+    if fallback_token:
+        return {"xsec_source": fallback_source or "pc_search", "xsec_token": fallback_token, "href": ""}
+
+    note_id_json = json.dumps(note_id)
+    expression = r"""
+((noteId) => {
+  const decode = (value) => String(value || '')
+    .replaceAll('&amp;', '&')
+    .replaceAll('\\u002F', '/')
+    .replaceAll('\\/', '/')
+    .replaceAll('\\u003F', '?')
+    .replaceAll('\\u003D', '=')
+    .replaceAll('\\u0026', '&');
+  const candidates = [];
+  const push = (value) => {
+    const text = decode(value);
+    if (text && text.includes(noteId) && text.includes('xsec_token=')) candidates.push(text);
+  };
+  push(location.href);
+  for (const anchor of Array.from(document.querySelectorAll('a[href]'))) {
+    push(anchor.href || anchor.getAttribute('href'));
+  }
+  push(document.documentElement.outerHTML);
+  for (const text of candidates) {
+    const patterns = [
+      new RegExp(`https?:\\/\\/www\\.xiaohongshu\\.com\\/(?:search_result|explore|discovery\\/item)\\/${noteId}[^"'<>\\s]*xsec_token=[^"'<>\\s&]+[^"'<>\\s]*`, 'g'),
+      new RegExp(`\\/(?:search_result|explore|discovery\\/item)\\/${noteId}[^"'<>\\s]*xsec_token=[^"'<>\\s&]+[^"'<>\\s]*`, 'g')
+    ];
+    for (const pattern of patterns) {
+      const matches = text.match(pattern) || [];
+      for (const raw of matches) {
+        try {
+          const href = new URL(raw, location.origin).href;
+          const url = new URL(href);
+          const token = url.searchParams.get('xsec_token') || '';
+          const source = url.searchParams.get('xsec_source') || 'pc_search';
+          if (token) return { href, xsec_token: token, xsec_source: source };
+        } catch (_) {}
+      }
+    }
+  }
+  return { href: location.href, xsec_token: '', xsec_source: '' };
+})(""" + note_id_json + r""")
+"""
+    deadline = time.time() + max(1.0, min(timeout, 20.0))
+    last_result: Dict[str, str] = {}
+    while time.time() < deadline:
+        try:
+            result = page.evaluate(expression) or {}
+            if isinstance(result, dict):
+                last_result = {str(key): str(value or "") for key, value in result.items()}
+                if last_result.get("xsec_token"):
+                    print(
+                        f"已从小红书页面补齐 xsec_token，xsec_source={last_result.get('xsec_source') or 'pc_search'}",
+                        flush=True,
+                    )
+                    return last_result
+        except Exception:
+            pass
+        time.sleep(0.8)
+
+    if fallback_token:
+        return {"xsec_source": fallback_source or "pc_search", "xsec_token": fallback_token, "href": ""}
+    href = last_result.get("href", "")
+    print(
+        "当前小红书链接缺少 xsec_token，页面中也未解析到 token；"
+        "将继续用 note_id 直接请求接口，如平台拒绝会在下一步返回错误。"
+        f" 当前页面：{href}",
+        flush=True,
+    )
+    return {"href": href, "xsec_token": "", "xsec_source": fallback_source or "pc_search"}
 
 
 def browser_cookie_header(page: CdpClient) -> str:
@@ -646,6 +787,129 @@ def pick(row: Dict[str, Any], *keys: str) -> Any:
     return ""
 
 
+def pick_by_suffix(row: Dict[str, Any], *suffixes: str, min_length: int = 1) -> Any:
+    for suffix in suffixes:
+        for key, value in row.items():
+            if not key.endswith(suffix):
+                continue
+            text = str(value or "").strip()
+            if len(text) >= min_length and text not in ("[]", "{}"):
+                return value
+    return ""
+
+
+def pick_first_text(row: Dict[str, Any], exact_keys: Iterable[str], suffixes: Iterable[str] = ()) -> str:
+    value = pick(row, *exact_keys)
+    if value not in (None, ""):
+        text = str(value).strip()
+        if text and text not in ("[]", "{}"):
+            return text
+    value = pick_by_suffix(row, *suffixes, min_length=1)
+    return str(value or "").strip()
+
+
+def xhs_note_title(flat: Dict[str, Any]) -> str:
+    return pick_first_text(
+        flat,
+        [
+            "items.0.note_card.title",
+            "items.0.note_card.display_title",
+            "note_card.title",
+            "note_card.display_title",
+            "title",
+            "display_title",
+            "preview_title",
+        ],
+        [".note_card.title", ".note_card.display_title", ".title", ".display_title"],
+    )
+
+
+def xhs_note_body(flat: Dict[str, Any]) -> str:
+    body = pick_first_text(
+        flat,
+        [
+            "items.0.note_card.desc",
+            "items.0.note_card.desc_v2",
+            "items.0.note_card.content",
+            "note_card.desc",
+            "note_card.desc_v2",
+            "note_card.content",
+            "desc",
+            "desc_v2",
+            "content",
+            "preview_text",
+        ],
+        [".note_card.desc", ".note_card.desc_v2", ".note_card.content", ".desc", ".desc_v2", ".content"],
+    )
+    if not body:
+        body = xhs_note_title(flat)
+    return append_media_text(
+        body,
+        str(pick(flat, "media_enrichment.image_ocr_text")),
+        str(pick(flat, "media_enrichment.video_transcript")),
+    )
+
+
+def xhs_author_nickname(flat: Dict[str, Any]) -> str:
+    value = pick_first_text(
+        flat,
+        [
+            "items.0.note_card.user.nickname",
+            "note_card.user.nickname",
+            "user.nickname",
+            "author.nickname",
+            "preview_author",
+        ],
+        [".note_card.user.nickname", ".user.nickname", ".author.nickname"],
+    )
+    lines = [line.strip() for line in str(value or "").splitlines() if line.strip()]
+    if not lines:
+        return ""
+    author = lines[0]
+    author = re.sub(
+        r"\s*/\s*(刚刚|\d+\s*(秒|分钟|小时|天|周|月|年)前|昨天|前天|今天.*)$",
+        "",
+        author,
+    ).strip()
+    return author
+
+
+def xhs_note_id(flat: Dict[str, Any]) -> str:
+    return pick_first_text(
+        flat,
+        ["note_id", "items.0.note_card.note_id", "items.0.id", "note_card.note_id", "id"],
+        [".note_card.note_id"],
+    )
+
+
+def xhs_count(flat: Dict[str, Any], name: str) -> Any:
+    exact = [
+        f"items.0.note_card.interact_info.{name}",
+        f"note_card.interact_info.{name}",
+        f"interact_info.{name}",
+        name,
+    ]
+    value = pick(flat, *exact)
+    if value not in (None, ""):
+        return value
+    return pick_by_suffix(flat, f".interact_info.{name}", f".{name}")
+
+
+def xhs_summary_row(flat: Dict[str, Any]) -> OrderedDict:
+    out = OrderedDict()
+    out["笔记ID"] = xhs_note_id(flat)
+    out["博主昵称"] = xhs_author_nickname(flat)
+    out["笔记链接"] = pick(flat, "source_url")
+    out["笔记标题"] = xhs_note_title(flat)
+    out["笔记内容"] = xhs_note_body(flat)
+    out["点赞量"] = xhs_count(flat, "liked_count")
+    out["收藏量"] = xhs_count(flat, "collected_count")
+    out["评论量"] = xhs_count(flat, "comment_count")
+    out["分享量"] = xhs_count(flat, "share_count")
+    out["发布时间"] = format_time(pick(flat, "items.0.note_card.time", "note_card.time") or pick_by_suffix(flat, ".note_card.time", ".time"))
+    return out
+
+
 def format_time(value: Any) -> str:
     if value in (None, ""):
         return ""
@@ -672,28 +936,11 @@ def export_ten_fields_csv(flat: Dict[str, Any], output_path: Path) -> None:
         "发布时间",
     ]
 
-    body = append_media_text(
-        pick(flat, "items.0.note_card.desc"),
-        str(pick(flat, "media_enrichment.image_ocr_text")),
-        str(pick(flat, "media_enrichment.video_transcript")),
-    )
-
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=out_fields)
         writer.writeheader()
-        writer.writerow({
-            "笔记ID": pick(flat, "note_id", "items.0.note_card.note_id", "items.0.id"),
-            "博主昵称": pick(flat, "items.0.note_card.user.nickname"),
-            "笔记链接": pick(flat, "source_url"),
-            "笔记标题": pick(flat, "items.0.note_card.title"),
-            "笔记内容": body,
-            "点赞量": pick(flat, "items.0.note_card.interact_info.liked_count"),
-            "收藏量": pick(flat, "items.0.note_card.interact_info.collected_count"),
-            "评论量": pick(flat, "items.0.note_card.interact_info.comment_count"),
-            "分享量": pick(flat, "items.0.note_card.interact_info.share_count"),
-            "发布时间": format_time(pick(flat, "items.0.note_card.time")),
-        })
+        writer.writerow(xhs_summary_row(flat))
 
 
 def wait_for_login_cookie(page: CdpClient, initial_state: Dict[str, Any], timeout: float) -> Dict[str, Any]:
@@ -715,7 +962,20 @@ def wait_for_login_cookie(page: CdpClient, initial_state: Dict[str, Any], timeou
 
 
 def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
-    note_id, xsec_source, xsec_token = parse_note_url(args.url)
+    note_url = extract_note_url(args.url)
+    note_id, xsec_source, xsec_token = parse_note_url(note_url)
+    if not xsec_token:
+        cached_url = cached_tokenized_url(note_id)
+        if cached_url:
+            cached_id, cached_source, cached_token = parse_note_url(cached_url)
+            if cached_id == note_id and cached_token:
+                note_url = cached_url
+                xsec_source = cached_source or xsec_source
+                xsec_token = cached_token
+                print(
+                    f"已从本地历史数据为小红书裸链接补齐 xsec_token，note_id={note_id}，xsec_source={xsec_source}",
+                    flush=True,
+                )
     output = Path(args.output) if args.output else XHS_ORIGIN_CSV
     summary_output = None if args.no_summary else (
         Path(args.summary_output) if args.summary_output else XHS_SUMMARY_CSV
@@ -740,7 +1000,7 @@ def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
     try:
         port, ws_path = wait_for_debug_port(user_dir, args.browser_timeout)
         page = make_page_client(port, ws_path, args.browser_timeout)
-        wait_for_page_signer(page, args.url, args.browser_timeout)
+        wait_for_page_signer(page, note_url, args.browser_timeout)
         state = wait_for_login_cookie(page, page_state(page), args.login_timeout)
         state["cookie_header"] = browser_cookie_header(page)
         if not state.get("a1"):
@@ -751,9 +1011,15 @@ def run(args: argparse.Namespace) -> Tuple[Path, Optional[Path]]:
             )
         if not state.get("cookie_header"):
             raise RuntimeError("未能从浏览器读取小红书 Cookie，请登录后重试。")
+        access = resolve_note_access_from_page(page, note_id, xsec_source, xsec_token, args.browser_timeout)
+        xsec_source = access.get("xsec_source") or xsec_source or "pc_search"
+        xsec_token = access.get("xsec_token") or xsec_token
+        source_url = access.get("href") or note_url
+        if xsec_token and "xsec_token=" not in source_url:
+            source_url = with_url_query(source_url, xsec_token=xsec_token, xsec_source=xsec_source)
         body = build_body(note_id, xsec_source, xsec_token)
         data = post_feed(page, state, body, timeout=args.http_timeout)
-        flat = build_flat_row(data, args.url, note_id, xsec_source)
+        flat = build_flat_row(data, source_url, note_id, xsec_source)
         if not args.no_media_enrich:
             flat = enrich_flat_row("xhs", flat)
         export_csv(flat, output)

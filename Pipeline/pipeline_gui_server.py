@@ -6,6 +6,7 @@ import os
 import csv
 import queue
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -138,6 +139,96 @@ DATA_TABLE_FIELDS = [
     "是否剔除",
     "是否剔除.输出结果",
 ]
+
+
+def python_module_score(python_bin: str, modules: list[str]) -> tuple[int, str]:
+    code = (
+        "import importlib, json, sys\n"
+        f"mods = {json.dumps(modules)}\n"
+        "ok = []\n"
+        "errors = []\n"
+        "for name in mods:\n"
+        "    try:\n"
+        "        importlib.import_module(name)\n"
+        "        ok.append(name)\n"
+        "    except Exception as exc:\n"
+        "        errors.append(f'{name}: {exc}')\n"
+        "print(json.dumps({'executable': sys.executable, 'ok': ok, 'errors': errors}, ensure_ascii=False))\n"
+    )
+    try:
+        result = subprocess.run(
+            [python_bin, "-c", code],
+            cwd=str(PROJECT_ROOT),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=10,
+        )
+    except Exception as exc:
+        return 0, str(exc)
+    detail = (result.stdout or result.stderr or "").strip()
+    if result.returncode != 0:
+        return 0, detail
+    try:
+        payload = json.loads(detail.splitlines()[-1])
+        return len(payload.get("ok") or []), detail
+    except Exception:
+        return 0, detail
+
+
+def candidate_python_bins() -> list[str]:
+    raw = [
+        os.environ.get("PIPELINE_PYTHON"),
+        str(PROJECT_ROOT / ".venv" / "bin" / "python"),
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/usr/bin/python3",
+        shutil.which("python3.9"),
+        shutil.which("python3"),
+        sys.executable,
+        "python3",
+    ]
+    seen: set[str] = set()
+    candidates: list[str] = []
+    for value in raw:
+        if not value:
+            continue
+        resolved = value
+        if "/" not in value:
+            resolved = shutil.which(value) or value
+        if resolved in seen:
+            continue
+        if "/" in resolved and not Path(resolved).exists():
+            continue
+        seen.add(resolved)
+        candidates.append(resolved)
+    return candidates
+
+
+def choose_script_python() -> str:
+    required = ["openpyxl", "faster_whisper", "av"]
+    if sys.platform == "darwin":
+        required.append("Vision")
+    best = sys.executable
+    best_score = -1
+    best_detail = ""
+    for candidate in candidate_python_bins():
+        score, detail = python_module_score(candidate, required)
+        if score > best_score:
+            best = candidate
+            best_score = score
+            best_detail = detail
+        if score == len(required):
+            print(f"Pipeline child Python: {candidate}", flush=True)
+            return candidate
+    print(
+        "Pipeline child Python warning: no candidate imported all optional modules; "
+        f"using {best}. Probe: {best_detail}",
+        flush=True,
+    )
+    return best
+
+
+SCRIPT_PYTHON = choose_script_python()
 
 
 def number_value(value: Any) -> int:
@@ -568,8 +659,11 @@ def run_checked(cmd: list[str]) -> str:
         detail = (result.stderr or result.stdout or "").strip()
         command = " ".join(str(part) for part in cmd)
         raise RuntimeError(
-            detail
-            or f"{Path(cmd[1]).name} exited with code {result.returncode}\n命令：{command}\nPython：{sys.executable}"
+            (
+                detail
+                or f"{Path(cmd[1]).name if len(cmd) > 1 else cmd[0]} exited with code {result.returncode}"
+            )
+            + f"\n命令：{command}\nServer Python：{sys.executable}\nScript Python：{cmd[0]}"
         )
     parts = []
     if result.stdout:
@@ -607,6 +701,23 @@ def parse_json_stdout(stdout: str) -> dict[str, Any]:
     return {"stdout": stdout}
 
 
+def platform_search_filters(payload: dict, config: dict[str, Any]) -> dict[str, str]:
+    nested = payload.get("filtersByPlatform")
+    source = payload
+    if isinstance(nested, dict):
+        candidate = nested.get(config["key"]) or nested.get(config["name"])
+        if isinstance(candidate, dict):
+            source = candidate
+    return {
+        "sortBy": str(source.get("sortBy") or ("综合排序" if config["key"] == "dy" else "综合")),
+        "noteType": str(source.get("noteType") or "不限"),
+        "publishTime": str(source.get("publishTime") or "不限"),
+        "searchScope": str(source.get("searchScope") or "不限"),
+        "location": str(source.get("location") or "不限"),
+        "videoDuration": str(source.get("videoDuration") or "不限"),
+    }
+
+
 def run_search(payload: dict) -> dict:
     config = platform_config(payload)
     keyword = str(payload.get("keyword") or "").strip()
@@ -614,14 +725,16 @@ def run_search(payload: dict) -> dict:
         raise ValueError("请输入关键词")
     max_notes = int(payload.get("maxNotes") or 0)
     scroll_rounds = int(payload.get("scrollRounds") or 10)
-    sort_by = str(payload.get("sortBy") or "综合")
-    note_type = str(payload.get("noteType") or "不限")
-    publish_time = str(payload.get("publishTime") or "不限")
-    search_scope = str(payload.get("searchScope") or "不限")
-    location = str(payload.get("location") or "不限")
+    filters = platform_search_filters(payload, config)
+    sort_by = filters["sortBy"]
+    note_type = filters["noteType"]
+    publish_time = filters["publishTime"]
+    search_scope = filters["searchScope"]
+    location = filters["location"]
+    video_duration = filters["videoDuration"]
     origin_temp, summary_temp = make_temp_outputs(config, f"search_{keyword}")
-    stdout = run_checked([
-        sys.executable,
+    cmd = [
+        SCRIPT_PYTHON,
         str(config["search_script"]),
         keyword,
         "--output",
@@ -649,7 +762,10 @@ def run_search(payload: dict) -> dict:
         "--location",
         location,
         "--headed",
-    ])
+    ]
+    if config["key"] == "dy":
+        cmd.extend(["--video-duration", video_duration])
+    stdout = run_checked(cmd)
     count = 0
     for line in stdout.splitlines():
         if line.startswith("Exported ") and " notes" in line:
@@ -668,6 +784,7 @@ def run_search(payload: dict) -> dict:
             "publishTime": publish_time,
             "searchScope": search_scope,
             "location": location,
+            "videoDuration": video_duration,
         },
         **media_info_from_origin(origin_temp),
         **append_info,
@@ -723,7 +840,7 @@ def run_note(payload: dict) -> dict:
     note_id = note_id_from_url(url, config)
     origin_temp, summary_temp = make_temp_outputs(config, f"note_{note_id}")
     stdout = run_checked([
-        sys.executable,
+        SCRIPT_PYTHON,
         str(config["note_script"]),
         "--use-default-profile",
         "--output",
@@ -753,7 +870,7 @@ def run_comments(payload: dict) -> dict:
     limit = int(payload.get("limit") or 0)
     comment_temp = make_comment_temp(config, f"note_{note_id}")
     stdout = run_checked([
-        sys.executable,
+        SCRIPT_PYTHON,
         str(config["comment_script"]),
         "--use-default-profile",
         "--output",
@@ -786,7 +903,7 @@ def run_clean_data(payload: dict) -> dict:
     if platform == "all":
         return run_clean_data_parallel(payload)
     stdout = run_checked([
-        sys.executable,
+        SCRIPT_PYTHON,
         str(CLEAN_SCRIPT),
         "--platform",
         platform,
@@ -806,7 +923,7 @@ def run_clean_data_parallel(payload: dict) -> dict:
     def run_one(next_payload: dict) -> dict:
         config = platform_config(next_payload)
         stdout = run_checked([
-            sys.executable,
+            SCRIPT_PYTHON,
             str(CLEAN_SCRIPT),
             "--platform",
             config["key"],
@@ -842,7 +959,7 @@ def build_ai_fill_command(payload: dict, progress: bool = False) -> tuple[dict[s
     limit = int(payload.get("limit") or 0)
     concurrency = int(payload.get("concurrency") or 3)
     cmd = [
-        sys.executable,
+        SCRIPT_PYTHON,
         str(config["ai_script"]),
         "--table",
         str(config["data_table_csv"]),
@@ -1169,7 +1286,7 @@ def run_amplification_export(payload: dict) -> dict:
     start_date = str(payload.get("startDate") or "")
     end_date = str(payload.get("endDate") or "")
     cmd = [
-        sys.executable,
+        SCRIPT_PYTHON,
         str(config["amplification_script"]),
         "--source",
         str(config["data_table_csv"]),
@@ -1222,6 +1339,10 @@ class Handler(SimpleHTTPRequestHandler):
             return json_response(self, 200, {
                 "ok": True,
                 "busy": task_state_snapshot(),
+                "python": {
+                    "server": sys.executable,
+                    "scripts": SCRIPT_PYTHON,
+                },
                 "platforms": {
                     key: {
                         "name": value["name"],
@@ -1319,7 +1440,8 @@ def main() -> int:
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     url = f"http://127.0.0.1:{port}/"
     print(f"Public Opinion Pipeline GUI running at {url}")
-    threading.Timer(0.35, lambda: webbrowser.open(url)).start()
+    if os.environ.get("PIPELINE_GUI_NO_OPEN") != "1":
+        threading.Timer(0.35, lambda: webbrowser.open(url)).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -732,6 +732,13 @@ def decision_passes(decision: Decision, min_decision: str) -> bool:
 
 
 def require_openpyxl():
+    version_tag = f"{sys.version_info.major}.{sys.version_info.minor}"
+
+    def compatible(candidate: Path) -> bool:
+        text = str(candidate).lower()
+        versions = re.findall(r"python[/\\]?(\d+\.\d+)", text)
+        return not versions or version_tag in versions
+
     attempted_paths: list[str] = []
     try:
         import openpyxl  # type: ignore
@@ -750,7 +757,7 @@ def require_openpyxl():
         candidate_paths.extend(Path.home().glob(".local/lib/python*/site-packages"))
 
         for candidate in candidate_paths:
-            if not candidate.exists():
+            if not candidate.exists() or not compatible(candidate):
                 continue
             text = str(candidate)
             attempted_paths.append(text)

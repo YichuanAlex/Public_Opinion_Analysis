@@ -69,6 +69,26 @@ body {
   opacity: 0.72;
 }
 
+.suite-nav-link {
+  display: grid;
+  min-height: 42px;
+  margin: 10px 0 4px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.suite-nav-link:hover {
+  border-color: rgba(16, 126, 112, 0.34);
+  color: var(--teal);
+  box-shadow: 0 8px 18px rgba(16, 126, 112, 0.08);
+}
+
 .xhs-shell .workspace {
   overflow: auto;
 }

@@ -37,6 +37,13 @@ This tool is designed for Didi-related public opinion monitoring. It supports th
 
 ```text
 /Users/didi/Downloads/Public_Opinion_Analysis
+├── run_public_opinion_suite.command
+├── check_and_repair_monitoring_tables.py
+├── Visualization
+│   ├── server.py
+│   ├── index.html
+│   ├── app.js
+│   └── styles.css
 ├── Pipeline
 │   ├── run_pipeline_gui.command
 │   ├── pipeline_gui_server.py
@@ -87,6 +94,9 @@ The core folders are:
 
 ```text
 /Users/didi/Downloads/Public_Opinion_Analysis
+├── run_public_opinion_suite.command  # One-click launcher for Visualization + Pipeline
+├── check_and_repair_monitoring_tables.py
+├── Visualization             # Monthly dashboard homepage
 ├── Pipeline                 # Collection GUI, scripts, normalized CSV outputs
 ├── Hype_Something           # Local Hype judgment tool and Excel workbooks
 ├── cache                    # Temporary downloaded media; auto-cleaned per post
@@ -195,6 +205,7 @@ python3 -m pip install -r requirements.txt
 
 ```bash
 chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/run_pipeline_gui.command
+chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/run_public_opinion_suite.command
 ```
 
 4. 如果 macOS 提示“无法打开来自未知开发者的文件”，右键点击 `run_pipeline_gui.command`，选择“打开”。
@@ -213,6 +224,7 @@ English:
 
 ```bash
 chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/run_pipeline_gui.command
+chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/run_public_opinion_suite.command
 ```
 
 4. If macOS blocks the file as coming from an unidentified developer, right-click `run_pipeline_gui.command` and choose Open.
@@ -305,7 +317,29 @@ Notes:
 
 中文：
 
-最简单方式是双击：
+推荐入口是项目根目录的总启动命令。它会同时启动可视化大屏和 Pipeline 采集工作台，并把“可视化大屏”作为首页打开：
+
+```text
+/Users/didi/Downloads/Public_Opinion_Analysis/run_public_opinion_suite.command
+```
+
+也可以在终端中运行：
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+bash run_public_opinion_suite.command
+```
+
+默认端口：
+
+| 页面 | 默认地址 |
+|---|---|
+| 可视化大屏首页 | `http://127.0.0.1:8765/` |
+| Pipeline 采集工作台 | `http://127.0.0.1:8766/` |
+
+可视化大屏右上角有“打开舆情采集工作台”按钮，会在新网页打开 Pipeline；Pipeline 左侧有“返回可视化首页”按钮。
+
+如果只想单独调试采集工作台，也可以双击：
 
 ```text
 /Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/run_pipeline_gui.command
@@ -321,14 +355,40 @@ bash Pipeline/run_pipeline_gui.command
 启动后会自动打开本地网页，地址类似：
 
 ```text
-http://127.0.0.1:8765/
+http://127.0.0.1:8766/
 ```
 
-如果 8765 被占用，程序会自动换到附近可用端口。
+如果端口被占用，Pipeline 单独启动时会自动换到附近可用端口。总启动命令可通过环境变量改端口：
+
+```bash
+VISUALIZATION_PORT=8865 PIPELINE_GUI_PORT=8866 bash run_public_opinion_suite.command
+```
 
 English:
 
-The easiest way is to double-click:
+The recommended entry point is the root launcher. It starts both the dashboard and the Pipeline workspace, then opens the Visualization dashboard as the homepage:
+
+```text
+/Users/didi/Downloads/Public_Opinion_Analysis/run_public_opinion_suite.command
+```
+
+Or run it in Terminal:
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+bash run_public_opinion_suite.command
+```
+
+Default ports:
+
+| Page | Default URL |
+|---|---|
+| Visualization dashboard homepage | `http://127.0.0.1:8765/` |
+| Pipeline collection workspace | `http://127.0.0.1:8766/` |
+
+The dashboard has an `打开舆情采集工作台` button in the top-right corner, which opens Pipeline in a new tab. Pipeline has a `返回可视化首页` link on the left side.
+
+If you only want to debug the collection workspace, double-click:
 
 ```text
 /Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/run_pipeline_gui.command
@@ -344,10 +404,14 @@ bash Pipeline/run_pipeline_gui.command
 The local web GUI will open automatically at a URL like:
 
 ```text
-http://127.0.0.1:8765/
+http://127.0.0.1:8766/
 ```
 
-If port 8765 is already in use, the server will automatically choose a nearby available port.
+When Pipeline is launched alone, it automatically chooses a nearby free port if the default one is occupied. The root launcher ports can be changed with environment variables:
+
+```bash
+VISUALIZATION_PORT=8865 PIPELINE_GUI_PORT=8866 bash run_public_opinion_suite.command
+```
 
 ---
 
@@ -461,6 +525,96 @@ Douyin outputs:
 
 ---
 
+## 9.1 监控表核心字段回源修复 / Source Refresh for Missing Core Fields
+
+中文：
+
+如果 `xhs_origin_data.csv`、`dy_origin_data.csv` 和两张监控总表里同一条帖子的核心字段都为空，例如 `笔记内容`、`笔记标题`、`发布时间`、互动数据缺失，不能只靠本地互补解决。这时使用根目录脚本重新访问平台，按帖子 ID 逐条回源重爬：
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 check_and_repair_monitoring_tables.py --platform all --dry-run --refresh-missing --max-refresh 20
+```
+
+上面的命令只生成报告，不访问平台。确认候选合理后，再执行正式修复：
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 check_and_repair_monitoring_tables.py \
+  --platform all \
+  --refresh-missing \
+  --max-refresh 20 \
+  --headed \
+  --request-interval 25 \
+  --jitter 10 \
+  --retry 2
+```
+
+参数说明：
+
+| 参数 | 说明 |
+|---|---|
+| `--platform all/xhs/dy` | 选择修复双平台、小红书或抖音 |
+| `--dry-run` | 只检查候选并输出报告，不写表、不访问平台 |
+| `--refresh-missing` | 对本地仍缺核心字段的帖子回源重爬 |
+| `--max-refresh 20` | 每个平台本次最多重爬 20 条；`0` 表示不限制 |
+| `--headed` | 显示浏览器窗口，便于复用登录态和观察风控页面 |
+| `--request-interval 25` | 每条之间至少等待 25 秒 |
+| `--jitter 10` | 每条额外随机等待 0-10 秒 |
+| `--retry 2` | 单条失败最多重试 2 轮 |
+
+小红书裸链接处理：
+
+- 如果链接只有 `https://www.xiaohongshu.com/discovery/item/{note_id}`，脚本会先在本地 `xhs_origin_data.csv` 和 `xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv` 中查找同 ID 的历史 `xsec_token` 链接。
+- 找到历史 token 后会自动切换为带 `xsec_token` 的 webshare 链接。
+- 如果本地没有 token，脚本会打开页面尝试解析；若账号处于 `300013` 风控状态，应暂停采集，等网页端普通浏览恢复后再运行。
+- 最稳妥的输入仍然是完整分享链接，例如含 `source=webshare&xsec_token=...&xsec_source=pc_share` 的链接。
+
+English:
+
+If the same post has blank core fields in both origin CSVs and monitoring tables, such as missing `笔记内容`, title, publish time, or interaction metrics, local table merging is not enough. Use the root script to revisit the platform and refresh missing rows by post ID:
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 check_and_repair_monitoring_tables.py --platform all --dry-run --refresh-missing --max-refresh 20
+```
+
+The command above only generates a report and does not visit the platform. After reviewing the candidates, run the real refresh:
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 check_and_repair_monitoring_tables.py \
+  --platform all \
+  --refresh-missing \
+  --max-refresh 20 \
+  --headed \
+  --request-interval 25 \
+  --jitter 10 \
+  --retry 2
+```
+
+Argument summary:
+
+| Argument | Description |
+|---|---|
+| `--platform all/xhs/dy` | Refresh both platforms, Rednote/Xiaohongshu only, or Douyin only |
+| `--dry-run` | Inspect candidates and write a report only; no writeback and no platform visit |
+| `--refresh-missing` | Re-crawl posts that still have missing core fields locally |
+| `--max-refresh 20` | Refresh at most 20 rows per platform; `0` means no limit |
+| `--headed` | Show the browser window to reuse login state and observe risk-control pages |
+| `--request-interval 25` | Wait at least 25 seconds between rows |
+| `--jitter 10` | Add 0-10 seconds random wait between rows |
+| `--retry 2` | Retry each failed row up to 2 times |
+
+Rednote/Xiaohongshu bare-link handling:
+
+- If the input is only `https://www.xiaohongshu.com/discovery/item/{note_id}`, the script first searches local `xhs_origin_data.csv` and `xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv` for a historical URL with `xsec_token` for the same note ID.
+- If a historical token is found, it automatically switches to the tokenized webshare URL.
+- If no local token is found, the script opens the page and tries to parse one. If the account is under `300013` rate limit, stop collection and retry after normal web browsing recovers.
+- The safest input is still the full share URL containing `source=webshare&xsec_token=...&xsec_source=pc_share`.
+
+---
+
 ## 10. 使用方式一：单帖子单查询 / Workflow 1: Single Post Query
 
 中文：
@@ -481,11 +635,15 @@ Douyin outputs:
 https://www.xiaohongshu.com/discovery/item/...
 ```
 
+小红书建议优先粘贴完整分享文案或带 `xsec_token` 的 webshare 链接。只有裸 `discovery/item/{id}` 链接时，脚本会尝试用本地历史 token 缓存自动补齐。
+
 抖音：
 
 ```text
 https://www.douyin.com/video/...
 ```
+
+抖音支持 `douyin.com/video/...`、`iesdouyin.com/share/video/...`、`v.douyin.com/...` 短链和完整分享文案。
 
 English:
 
@@ -505,11 +663,15 @@ Rednote/Xiaohongshu:
 https://www.xiaohongshu.com/discovery/item/...
 ```
 
+For Rednote/Xiaohongshu, full share text or a webshare URL with `xsec_token` is preferred. If only a bare `discovery/item/{id}` URL is provided, the script tries to fill the token from local history.
+
 Douyin:
 
 ```text
 https://www.douyin.com/video/...
 ```
+
+Douyin supports `douyin.com/video/...`, `iesdouyin.com/share/video/...`, `v.douyin.com/...` short URLs, and full share text.
 
 ---
 
@@ -1090,7 +1252,7 @@ python3 Pipeline/dy_amplification_export.py \
 - 关键词采集不要设置过大数量。
 - 不要连续高频重复点击。
 - 如果出现验证码、安全验证、登录墙，请在打开的浏览器中手动处理后再重试。
-- 如果小红书链接缺少或失效 `xsec_token`，请重新复制分享链接。
+- 如果小红书链接缺少 `xsec_token`，脚本会先尝试从本地历史数据查同 ID 的 tokenized 链接；如果仍失败，请重新复制完整分享链接。
 - 如果抖音链接是短链，脚本会尝试打开页面解析真实 `aweme_id`。
 
 English:
@@ -1104,7 +1266,7 @@ Recommendations:
 - Do not use an overly large keyword collection count.
 - Avoid repeated high-frequency clicks.
 - If CAPTCHA, security verification, or login walls appear, complete them manually in the opened browser and retry.
-- If a Rednote/Xiaohongshu link has a missing or expired `xsec_token`, copy a fresh share link.
+- If a Rednote/Xiaohongshu link is missing `xsec_token`, the script first tries to find a tokenized URL for the same note ID from local history. If that still fails, copy a fresh full share URL.
 - If a Douyin link is a short link, the script attempts to open the page and resolve the real `aweme_id`.
 
 ---
@@ -1400,30 +1562,32 @@ Pipeline/gui_exports/
 中文：
 
 1. 打开 Chrome，确认小红书和抖音登录状态正常。
-2. 双击 `Pipeline/run_pipeline_gui.command`。
-3. 选择平台。
-4. 先跑小数量关键词搜索，例如 10 条。
-5. 检查当前平台监控总表是否追加正常。
-6. 点击“清洗当前平台总表”去重并删除招聘/实习类脏数据。
-7. 点击“AI填写总表”补齐分析字段。
-8. 在“口碑加热候选”选择日期范围。
-9. 先勾选 dry-run 预览。
-10. 确认候选合理后取消 dry-run，写入对应平台 Excel。
-11. 如需进一步人工判断，打开 `Hype_Something/start_tool.command` 或点击 GUI 中“打开Hype软件界面”。
+2. 双击 `run_public_opinion_suite.command`，先进入可视化大屏首页。
+3. 需要采集或回填时，点击右上角“打开舆情采集工作台”。
+4. 在 Pipeline 中选择平台。
+5. 先跑小数量关键词搜索，例如 10 条。
+6. 检查当前平台监控总表是否追加正常。
+7. 点击“清洗当前平台总表”去重并删除招聘/实习类脏数据。
+8. 点击“AI填写总表”补齐分析字段。
+9. 在“口碑加热候选”选择日期范围。
+10. 先勾选 dry-run 预览。
+11. 确认候选合理后取消 dry-run，写入对应平台 Excel。
+12. 如需进一步人工判断，打开 `Hype_Something/start_tool.command` 或点击 GUI 中“打开Hype软件界面”。
 
 English:
 
 1. Open Chrome and confirm login status for Rednote/Xiaohongshu and Douyin.
-2. Double-click `Pipeline/run_pipeline_gui.command`.
-3. Select a platform.
-4. Start with a small keyword search, for example 10 rows.
-5. Check that the current platform monitoring table is appended correctly.
-6. Click `清洗当前平台总表` to deduplicate and remove recruitment/internship dirty rows.
-7. Click `AI填写总表` to fill analysis fields.
-8. Select a date range in the amplification section.
-9. Enable dry-run for preview.
-10. If the candidates look reasonable, disable dry-run and write to the platform workbook.
-11. For further manual judgment, open `Hype_Something/start_tool.command` or click `打开Hype软件界面` in the GUI.
+2. Double-click `run_public_opinion_suite.command` and enter the Visualization dashboard first.
+3. When collection or backfill is needed, click `打开舆情采集工作台` in the top-right corner.
+4. Select a platform in Pipeline.
+5. Start with a small keyword search, for example 10 rows.
+6. Check that the current platform monitoring table is appended correctly.
+7. Click `清洗当前平台总表` to deduplicate and remove recruitment/internship dirty rows.
+8. Click `AI填写总表` to fill analysis fields.
+9. Select a date range in the amplification section.
+10. Enable dry-run for preview.
+11. If the candidates look reasonable, disable dry-run and write to the platform workbook.
+12. For further manual judgment, open `Hype_Something/start_tool.command` or click `打开Hype软件界面` in the GUI.
 
 ---
 
