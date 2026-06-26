@@ -85,6 +85,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     try:
         output, summary_output = run(args)
     except Exception as exc:
+        if any(token in str(exc) for token in ("300013", "Too many requests", "安全限制")):
+            dy.browser_profile_pool.mark_profile_blocked(getattr(args, "selected_profile_id", ""), str(exc))
         print(f"ERROR: {exc}", file=os.sys.stderr)
         return 1
     print(f"Full CSV exported: {output}")

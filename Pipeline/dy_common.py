@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import xhs_note_to_csv as browser
+import browser_profile_pool
 from media_enrichment import append_media_text
 
 
@@ -115,6 +116,7 @@ def default_browser_user_data_dir(chrome_path: str) -> Path:
 
 
 def launch_browser_page(args: Any, prefix: str) -> Tuple[subprocess.Popen, browser.CdpClient, Path, bool]:
+    browser_profile_pool.apply_profile_to_args(args, "dy", prefix)
     chrome_path = find_chrome(getattr(args, "chrome", None))
     if getattr(args, "use_default_profile", False) and getattr(args, "user_data_dir", None):
         raise ValueError("--use-default-profile cannot be combined with --user-data-dir")
@@ -503,6 +505,7 @@ def add_browser_args(parser: Any) -> None:
     parser.add_argument("--keep-browser-open", action="store_true", help="Do not close Chrome when finished.")
     parser.add_argument("--browser-timeout", type=float, default=45.0, help="Seconds to wait for Chrome/CDP.")
     parser.add_argument("--http-timeout", type=float, default=30.0, help="Seconds to wait for API requests.")
+    browser_profile_pool.add_profile_pool_args(parser)
 
 
 def cleanup(proc: subprocess.Popen, page: Optional[browser.CdpClient], user_dir: Path, owns_user_dir: bool, args: Any) -> None:

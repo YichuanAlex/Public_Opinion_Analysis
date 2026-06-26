@@ -1,0 +1,32 @@
+{
+  "profiles": [
+    {
+      "id": "chrome_19116411259",
+      "label": "Chrome 19116411259",
+      "browser": "chrome",
+      "chrome_path": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "profile_source": "/Users/didi/Library/Application Support/Google/Chrome",
+      "profile_directory": "Default",
+      "platforms": [
+        "xhs",
+        "dy"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "edge_17730297792",
+      "label": "Edge 17730297792",
+      "browser": "edge",
+      "chrome_path": "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+      "profile_source": "/Users/didi/Library/Application Support/Microsoft Edge",
+      "profile_directory": "Default",
+      "platforms": [
+        "xhs",
+        "dy"
+      ],
+      "enabled": true
+    }
+  ],
+  "min_interval_seconds": 8,
+  "blocked_cooldown_seconds": 1800
+}

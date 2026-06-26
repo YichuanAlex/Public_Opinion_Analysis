@@ -58,6 +58,7 @@ DY_AMPLIFICATION_SCRIPT = ROOT / "dy_amplification_export.py"
 EXPORT_DIR = ROOT / "gui_exports"
 TEMP_DIR = EXPORT_DIR / "session_tmp"
 TASK_LOCK_DIR = EXPORT_DIR / "task_locks"
+COPILOT_NOTE_CACHE_DIR = EXPORT_DIR / "copilot_note_cache"
 WRITE_LOCKS = {
     "xhs": threading.Lock(),
     "dy": threading.Lock(),
@@ -263,6 +264,9 @@ def json_response(handler: SimpleHTTPRequestHandler, status: int, payload: dict)
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
+    handler.send_header("Access-Control-Allow-Origin", "*")
+    handler.send_header("Access-Control-Allow-Headers", "Content-Type")
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     handler.send_header("Content-Length", str(len(data)))
     handler.end_headers()
     handler.wfile.write(data)
@@ -272,6 +276,42 @@ def read_json(handler: SimpleHTTPRequestHandler) -> dict:
     length = int(handler.headers.get("Content-Length") or "0")
     raw = handler.rfile.read(length).decode("utf-8") if length else "{}"
     return json.loads(raw or "{}")
+
+
+def note_id_from_payload(payload: dict[str, Any]) -> str:
+    candidates = [
+        payload.get("note_id"),
+        payload.get("noteId"),
+        payload.get("id"),
+    ]
+    note_card = payload.get("note_card")
+    if isinstance(note_card, dict):
+        candidates.extend([note_card.get("note_id"), note_card.get("id")])
+    for value in candidates:
+        text = str(value or "").strip()
+        if re.fullmatch(r"[0-9a-zA-Z]{24}", text):
+            return text
+    raise ValueError("Social_Media_Copilot payload 缺少有效的小红书笔记ID。")
+
+
+def save_copilot_xhs_note(payload: dict[str, Any]) -> dict[str, Any]:
+    note_id = note_id_from_payload(payload)
+    COPILOT_NOTE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    normalized = dict(payload)
+    normalized["note_id"] = note_id
+    normalized["platform"] = "xhs"
+    normalized["cached_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    path = COPILOT_NOTE_CACHE_DIR / f"xhs_{note_id}.json"
+    tmp_path = path.with_suffix(".json.tmp")
+    tmp_path.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp_path.replace(path)
+    return {
+        "ok": True,
+        "platform": "xhs",
+        "noteId": note_id,
+        "path": str(path),
+        "cachedAt": normalized["cached_at"],
+    }
 
 
 def platform_config(payload: dict | str | None = None) -> dict[str, Any]:
@@ -839,7 +879,7 @@ def run_note(payload: dict) -> dict:
         raise ValueError(f"链接框里没有识别到{config['name']}链接")
     note_id = note_id_from_url(url, config)
     origin_temp, summary_temp = make_temp_outputs(config, f"note_{note_id}")
-    stdout = run_checked([
+    cmd = [
         SCRIPT_PYTHON,
         str(config["note_script"]),
         "--use-default-profile",
@@ -848,7 +888,10 @@ def run_note(payload: dict) -> dict:
         "--summary-output",
         str(summary_temp),
         url,
-    ])
+    ]
+    if config["key"] == "xhs":
+        cmd.insert(-1, "--headed")
+    stdout = run_checked(cmd)
     append_info = append_pipeline_outputs(config, origin_temp, summary_temp)
     return {
         "ok": True,
@@ -1324,6 +1367,13 @@ class Handler(SimpleHTTPRequestHandler):
     def log_message(self, fmt: str, *args) -> None:
         print("[%s] %s" % (self.log_date_time_string(), fmt % args))
 
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.end_headers()
+
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         path = parsed.path
@@ -1358,30 +1408,34 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self) -> None:
         try:
+            parsed = urlparse(self.path)
+            path = parsed.path
             payload = read_json(self)
-            if self.path == "/api/search":
+            if path == "/api/copilot/xhs-note":
+                return json_response(self, 200, save_copilot_xhs_note(payload))
+            if path == "/api/search":
                 return json_response(self, 200, run_locked_platform_task(payload, "关键词批量数目查询", run_search))
-            if self.path == "/api/search-all":
+            if path == "/api/search-all":
                 return json_response(self, 200, run_parallel_platforms(payload, run_search, "关键词批量数目查询"))
-            if self.path == "/api/note":
+            if path == "/api/note":
                 return json_response(self, 200, run_locked_platform_task(payload, "单帖子单查询", run_note))
-            if self.path == "/api/comments":
+            if path == "/api/comments":
                 return json_response(self, 200, run_locked_platform_task(payload, "评论爬取", run_comments))
-            if self.path == "/api/clean-data":
+            if path == "/api/clean-data":
                 if str(payload.get("scope") or "current").strip().lower() == "all":
                     return json_response(self, 200, run_clean_data(payload))
                 return json_response(self, 200, run_locked_platform_task(payload, "去重/脏数据清洗", run_clean_data))
-            if self.path == "/api/ai-fill-all":
+            if path == "/api/ai-fill-all":
                 return json_response(self, 200, run_parallel_platforms(payload, run_ai_fill, "AI填写总表" if not payload.get("noAi") else "只回填ID/互动量"))
-            if self.path == "/api/ai-fill-all-stream":
+            if path == "/api/ai-fill-all-stream":
                 return run_ai_fill_all_stream(self, payload)
-            if self.path == "/api/ai-fill-stream":
+            if path == "/api/ai-fill-stream":
                 return run_ai_fill_stream(self, payload)
-            if self.path == "/api/ai-fill":
+            if path == "/api/ai-fill":
                 return json_response(self, 200, run_locked_platform_task(payload, "AI填写总表" if not payload.get("noAi") else "只回填ID/互动量", run_ai_fill))
-            if self.path == "/api/amplification-export":
+            if path == "/api/amplification-export":
                 return json_response(self, 200, run_locked_platform_task(payload, "口碑加热候选写入", run_amplification_export))
-            if self.path == "/api/open-hype":
+            if path == "/api/open-hype":
                 config = platform_config(payload)
                 subprocess.Popen(["open", str(HYPE_ROOT / "start_tool.command")])
                 return json_response(self, 200, {
@@ -1391,7 +1445,7 @@ class Handler(SimpleHTTPRequestHandler):
                     "workbook": str(config["hype_workbook"]),
                     "url": "http://localhost:5173",
                 })
-            if self.path == "/api/open-dir":
+            if path == "/api/open-dir":
                 subprocess.run(["open", str(ROOT)], check=False)
                 return json_response(self, 200, {"ok": True})
             self.send_error(404, "Not found")

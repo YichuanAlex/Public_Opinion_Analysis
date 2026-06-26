@@ -24,6 +24,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import browser_profile_pool
 import xhs_note_to_csv as note_exporter
 from pipeline_paths import XHS_ORIGIN_CSV, XHS_SUMMARY_CSV
 
@@ -669,6 +670,8 @@ def export_search(args: argparse.Namespace) -> Tuple[Path, Path, int]:
     chrome_path = note_exporter.find_chrome(args.chrome)
     if args.use_default_profile and args.user_data_dir:
         raise ValueError("--use-default-profile cannot be combined with --user-data-dir")
+    browser_profile_pool.apply_profile_to_args(args, "xhs", "search")
+    chrome_path = note_exporter.find_chrome(args.chrome)
 
     owns_user_dir = args.user_data_dir is None
     if args.use_default_profile:
@@ -796,11 +799,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("--login-timeout", type=float, default=0.0, help="Seconds to wait for manual login.")
     parser.add_argument("--browser-timeout", type=float, default=45.0, help="Seconds to wait for Chrome/CDP.")
     parser.add_argument("--http-timeout", type=float, default=30.0, help="Seconds to wait for detail requests.")
+    browser_profile_pool.add_profile_pool_args(parser)
     args = parser.parse_args(argv)
 
     try:
         output, summary_output, count = export_search(args)
     except Exception as exc:
+        if any(token in str(exc) for token in ("300013", "Too many requests", "安全限制")):
+            browser_profile_pool.mark_profile_blocked(getattr(args, "selected_profile_id", ""), str(exc))
         print(f"ERROR: {exc}", file=os.sys.stderr)
         return 1
     print(f"Exported {count} notes")

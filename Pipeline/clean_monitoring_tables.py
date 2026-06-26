@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
-from pipeline_paths import DY_DATA_TABLE_CSV, XHS_DATA_TABLE_CSV
+from pipeline_paths import DY_DATA_TABLE_CSV, DY_ORIGIN_CSV, XHS_DATA_TABLE_CSV, XHS_ORIGIN_CSV
 
 
 ROOT = Path(__file__).resolve().parent
@@ -20,6 +20,7 @@ TABLES = {
     "xhs": {
         "name": "小红书",
         "path": XHS_DATA_TABLE_CSV,
+        "origin_path": XHS_ORIGIN_CSV,
         "id_patterns": [
             re.compile(r"/(?:discovery/item|explore|search_result)/([0-9a-zA-Z]{24})"),
         ],
@@ -27,6 +28,7 @@ TABLES = {
     "dy": {
         "name": "抖音",
         "path": DY_DATA_TABLE_CSV,
+        "origin_path": DY_ORIGIN_CSV,
         "id_patterns": [
             re.compile(r"[?&]modal_id=(\d{10,30})"),
             re.compile(r"/(?:video|note|share/video)/(\d{10,30})"),
@@ -34,8 +36,39 @@ TABLES = {
     },
 }
 
-DIRTY_WORDS = ["实习", "新橙海", "工号", "入职", "面试", "桔厂", "cpdd", "无匹配内容", "无匹配内容", "无关", "无实质", "无明确关联"]
-DIRTY_FIELDS = ["笔记标题", "笔记内容", "概括", "博主昵称", "具体产品/场景", "业务线"]
+DIRTY_WORDS = [
+    "实习",
+    "新橙海",
+    "工号",
+    "入职",
+    "面试",
+    "桔厂",
+    "cpdd",
+    "无匹配内容",
+    "无关",
+    "无实质",
+    "无明确关联",
+    "Sorry, This Page Isn't Available Right Now",
+    "error_code=300031",
+    "error_code=300017",
+    "/404/sec_",
+    "/website-login/error",
+    "verifyMsg=",
+    "世兒杯",
+    "世系杯",
+    "顺风车",
+]
+ORIGIN_DIRTY_WORDS = [
+    "Sorry, This Page Isn't Available Right Now",
+    "error_code=300031",
+    "error_code=300017",
+    "/404/sec_",
+    "/website-login/error",
+    "verifyMsg=",
+    "世兒杯",
+    "世系杯",
+]
+DIRTY_FIELDS = ["笔记标题", "笔记链接", "笔记内容", "概括", "博主昵称", "具体产品/场景", "业务线"]
 
 
 def read_csv(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
@@ -77,6 +110,14 @@ def row_note_id(row: dict[str, Any], patterns: list[re.Pattern[str]]) -> str:
 def dirty_match(row: dict[str, Any]) -> str:
     text = "\n".join(clean_text(row.get(field)) for field in DIRTY_FIELDS)
     for word in DIRTY_WORDS:
+        if word in text:
+            return word
+    return ""
+
+
+def dirty_match_any_field(row: dict[str, Any], words: list[str]) -> str:
+    text = "\n".join(clean_text(value) for value in row.values())
+    for word in words:
         if word in text:
             return word
     return ""
@@ -168,22 +209,77 @@ def clean_table(platform: str, dry_run: bool = False) -> dict[str, Any]:
     }
 
 
+def clean_origin_table(platform: str, dry_run: bool = False) -> dict[str, Any]:
+    config = TABLES[platform]
+    path = Path(config["origin_path"])
+    fields, rows = read_csv(path)
+    if not fields:
+        return {
+            "platform": platform,
+            "platformName": config["name"],
+            "origin": str(path),
+            "beforeRows": 0,
+            "afterRows": 0,
+            "removedDirtyRows": 0,
+            "dirtySamples": [],
+            "backup": "",
+            "dryRun": dry_run,
+        }
+
+    kept: list[dict[str, Any]] = []
+    removed_dirty = 0
+    dirty_samples: list[str] = []
+    for row_index, row in enumerate(rows, start=2):
+        word = dirty_match_any_field(row, ORIGIN_DIRTY_WORDS)
+        if word:
+            removed_dirty += 1
+            if len(dirty_samples) < 8:
+                note_id = clean_text(row.get("note_id") or row.get("items.0.id") or row.get("items.0.note_card.note_id"))
+                title = clean_text(row.get("items.0.note_card.title") or row.get("title"))[:60]
+                dirty_samples.append(f"第{row_index}行 命中“{word}” {note_id or '无ID'} {title}")
+            continue
+        kept.append(row)
+
+    backup = ""
+    if not dry_run and removed_dirty:
+        backup = make_backup(path, f"{platform}_origin")
+        write_csv(path, fields, kept)
+
+    return {
+        "platform": platform,
+        "platformName": config["name"],
+        "origin": str(path),
+        "beforeRows": len(rows),
+        "afterRows": len(kept),
+        "removedDirtyRows": removed_dirty,
+        "dirtySamples": dirty_samples,
+        "backup": backup,
+        "dryRun": dry_run,
+    }
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     platforms = ["xhs", "dy"] if args.platform == "all" else [args.platform]
     results = [clean_table(platform, dry_run=args.dry_run) for platform in platforms]
+    origin_results = [clean_origin_table(platform, dry_run=args.dry_run) for platform in platforms]
     return {
         "ok": True,
         "kind": "clean-data",
         "platform": args.platform,
         "dryRun": args.dry_run,
         "results": results,
+        "originResults": origin_results,
         "beforeRows": sum(item["beforeRows"] for item in results),
         "afterRows": sum(item["afterRows"] for item in results),
         "removedDirtyRows": sum(item["removedDirtyRows"] for item in results),
+        "originBeforeRows": sum(item["beforeRows"] for item in origin_results),
+        "originAfterRows": sum(item["afterRows"] for item in origin_results),
+        "originRemovedDirtyRows": sum(item["removedDirtyRows"] for item in origin_results),
         "removedDuplicateRows": sum(item["removedDuplicateRows"] for item in results),
         "filledNoteIds": sum(item["filledNoteIds"] for item in results),
         "tables": [item["table"] for item in results],
-        "backups": [item["backup"] for item in results if item.get("backup")],
+        "origins": [item["origin"] for item in origin_results],
+        "backups": [item["backup"] for item in results + origin_results if item.get("backup")],
     }
 
 
