@@ -3,6 +3,7 @@ const COLORS = ["#1267f5", "#23b26d", "#f03d4f", "#7b61ff", "#ff8a1f", "#13b6c8"
 const state = {
   data: null,
   lastQuery: {},
+  resizeTimer: 0,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -17,6 +18,16 @@ function formatNumber(value) {
 function text(value, fallback = "暂无") {
   const str = String(value ?? "").trim();
   return str || fallback;
+}
+
+function truncateText(value, limit = 36) {
+  const str = text(value, "");
+  return str.length > limit ? `${str.slice(0, Math.max(0, limit))}...` : str;
+}
+
+function tooltipText(value, limit = 36) {
+  const full = text(value, "");
+  return `<span class="cell-text" title="${escapeHtml(full)}">${escapeHtml(truncateText(full, limit))}</span>`;
 }
 
 function currentMonthValue(month) {
@@ -116,7 +127,8 @@ function renderSideSummary(items) {
   (items || []).slice(0, 4).forEach((item, index) => {
     const li = document.createElement("li");
     li.dataset.index = String(index + 1);
-    li.textContent = item;
+    li.title = text(item, "");
+    li.textContent = truncateText(item, 52);
     target.appendChild(li);
   });
 }
@@ -127,7 +139,8 @@ function renderSummary(id, items) {
   (items || []).slice(0, 4).forEach((item, index) => {
     const node = document.createElement("div");
     node.className = "summary-item";
-    node.innerHTML = `<span>${index + 1}</span><p>${escapeHtml(item)}</p>`;
+    const full = text(item, "");
+    node.innerHTML = `<span>${index + 1}</span><p title="${escapeHtml(full)}">${escapeHtml(truncateText(full, 96))}</p>`;
     target.appendChild(node);
   });
   if (!target.children.length) target.innerHTML = `<div class="status-empty">暂无总结数据</div>`;
@@ -139,7 +152,8 @@ function renderAnalysis(id, items) {
   (items || []).slice(0, 5).forEach((item, index) => {
     const node = document.createElement("div");
     node.className = "analysis-item";
-    node.innerHTML = `<span>${index + 1}</span><p>${escapeHtml(item)}</p>`;
+    const full = text(item, "");
+    node.innerHTML = `<span>${index + 1}</span><p title="${escapeHtml(full)}">${escapeHtml(truncateText(full, 96))}</p>`;
     target.appendChild(node);
   });
   if (!target.children.length) target.innerHTML = `<div class="status-empty">暂无解读数据</div>`;
@@ -179,12 +193,15 @@ function setupCanvas(id) {
   if (!canvas) return null;
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  const height = Number(canvas.getAttribute("height") || 240);
-  canvas.width = Math.max(300, rect.width) * dpr;
+  const baseHeight = Number(canvas.getAttribute("height") || 240);
+  const width = Math.max(180, Math.floor(rect.width || canvas.parentElement?.clientWidth || 300));
+  const height = Math.max(160, Math.min(baseHeight, Math.round(width * 0.6)));
+  canvas.width = width * dpr;
   canvas.height = height * dpr;
+  canvas.style.height = `${height}px`;
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { canvas, ctx, width: Math.max(300, rect.width), height };
+  return { canvas, ctx, width, height };
 }
 
 function renderTrend(id, seriesA = [], seriesB = [], labelA = "本月", labelB = "对比") {
@@ -337,10 +354,11 @@ function renderWordCloud(words = []) {
   list.forEach((item, index) => {
     const node = document.createElement("span");
     node.className = "word-token";
-    const size = 13 + (Number(item.value || 1) / max) * 22;
+    const size = 13 + (Number(item.value || 1) / max) * 15;
     node.style.fontSize = `${size}px`;
     node.style.color = COLORS[index % COLORS.length];
-    node.textContent = item.text;
+    node.title = text(item.text, "");
+    node.textContent = truncateText(item.text, 10);
     target.appendChild(node);
   });
 }
@@ -358,14 +376,14 @@ function renderVoices(items = []) {
         <div class="avatar">${escapeHtml(String(item.author || "用").slice(0, 1))}</div>
         <span class="tag">${escapeHtml(item.platform || "平台")}</span>
       </div>
-      <h4>${escapeHtml(item.title || item.author || "用户原声")}</h4>
-      <p>${escapeHtml(item.text || "")}</p>
+      <h4 title="${escapeHtml(text(item.title || item.author || "用户原声", ""))}">${escapeHtml(truncateText(item.title || item.author || "用户原声", 24))}</h4>
+      <p title="${escapeHtml(text(item.text, ""))}">${escapeHtml(truncateText(item.text, 92))}</p>
       <div class="voice-foot"><span>${escapeHtml(item.date || "")}</span><span>♡ ${formatNumber(item.likes)}</span></div>
     </article>
   `).join("");
 
   $("hotVoiceList").innerHTML = list.slice(0, 3).map((item) => `
-    <div class="mini-voice">“${escapeHtml(item.text || "")}”<br><strong>${escapeHtml(item.author || "匿名")} · ${escapeHtml(item.date || "")}</strong></div>
+    <div class="mini-voice" title="${escapeHtml(text(item.text, ""))}">“${escapeHtml(truncateText(item.text, 96))}”<br><strong>${escapeHtml(item.author || "匿名")} · ${escapeHtml(item.date || "")}</strong></div>
   `).join("");
 }
 
@@ -424,20 +442,24 @@ function renderExternalReports(external) {
   }
   const chunks = [];
   errors.forEach((error) => {
-    chunks.push(`<div class="external-section"><h5>依赖提示</h5><p>${escapeHtml(error)}</p></div>`);
+    chunks.push(`<div class="external-section"><h5>依赖提示</h5><p title="${escapeHtml(text(error, ""))}">${escapeHtml(truncateText(error, 140))}</p></div>`);
   });
   reports.forEach((report) => {
+    const reportTitle = text(report.title || report.file, "");
+    const reportMeta = `${text(report.file, "")} · ${text(report.engine, "")}`;
     chunks.push(`
       <div class="external-report">
-        <h4>${escapeHtml(report.title || report.file)}</h4>
-        <p>${escapeHtml(report.file || "")} · ${escapeHtml(report.engine || "")}</p>
+        <h4 title="${escapeHtml(reportTitle)}">${escapeHtml(truncateText(reportTitle, 42))}</h4>
+        <p title="${escapeHtml(reportMeta)}">${escapeHtml(truncateText(reportMeta, 60))}</p>
       </div>
     `);
     (report.sections || []).forEach((section) => {
+      const title = text(section.title || "未命名小节", "");
+      const body = text(section.body || "该小节没有提取到正文。", "");
       chunks.push(`
         <article class="external-section">
-          <h5>${escapeHtml(section.title || "未命名小节")}</h5>
-          <p>${escapeHtml(section.body || "该小节没有提取到正文。")}</p>
+          <h5 title="${escapeHtml(title)}">${escapeHtml(truncateText(title, 42))}</h5>
+          <p title="${escapeHtml(body)}">${escapeHtml(truncateText(body, 180))}</p>
         </article>
       `);
     });
@@ -470,8 +492,8 @@ function renderChangeCards(data) {
   const cards = data.monthlyChanges.cards || [];
   $("changeCards").innerHTML = cards.map((item, index) => `
     <article class="change-card">
-      <h4>${index + 1}. ${escapeHtml(item.title)}</h4>
-      <p>${escapeHtml(item.text)}</p>
+      <h4 title="${escapeHtml(text(item.title, ""))}">${index + 1}. ${escapeHtml(truncateText(item.title, 26))}</h4>
+      <p title="${escapeHtml(text(item.text, ""))}">${escapeHtml(truncateText(item.text, 86))}</p>
     </article>
   `).join("") || `<div class="status-empty">暂无变化摘要</div>`;
 }
@@ -480,8 +502,8 @@ function renderFocusCards(data) {
   const items = data.monthlyChanges.cards || [];
   $("nextFocusCards").innerHTML = items.slice(0, 5).map((item, index) => `
     <article class="focus-card">
-      <h4>${index + 1}. ${escapeHtml(item.title)}</h4>
-      <p>${escapeHtml(item.text)}</p>
+      <h4 title="${escapeHtml(text(item.title, ""))}">${index + 1}. ${escapeHtml(truncateText(item.title, 24))}</h4>
+      <p title="${escapeHtml(text(item.text, ""))}">${escapeHtml(truncateText(item.text, 82))}</p>
     </article>
   `).join("");
 }
@@ -489,8 +511,8 @@ function renderFocusCards(data) {
 function renderCaseCards(items) {
   $("caseCards").innerHTML = (items || []).slice(0, 3).map((item) => `
     <article class="case-card">
-      <h4>${escapeHtml(item.title || item.author || "典型案例")}</h4>
-      <p>${escapeHtml(item.text || "")}</p>
+      <h4 title="${escapeHtml(text(item.title || item.author || "典型案例", ""))}">${escapeHtml(truncateText(item.title || item.author || "典型案例", 32))}</h4>
+      <p title="${escapeHtml(text(item.text, ""))}">${escapeHtml(truncateText(item.text, 120))}</p>
       <p><strong>相关讨论</strong> ${formatNumber(item.likes)} · 情感倾向 ${escapeHtml(item.sentiment || "未识别")}</p>
     </article>
   `).join("") || `<div class="status-empty">暂无案例摘要</div>`;
@@ -503,7 +525,7 @@ function renderImpactCards(data) {
     ["观察项", `评论文件 ${data.totals.commentFiles || 0} 个，建议持续补齐评论区以提高判断稳定性。`],
   ];
   $("impactCards").innerHTML = items.map((item) => `
-    <article class="impact-card"><h4>${item[0]}</h4><p>${item[1]}</p></article>
+    <article class="impact-card"><h4>${item[0]}</h4><p title="${escapeHtml(item[1])}">${escapeHtml(truncateText(item[1], 80))}</p></article>
   `).join("");
 }
 
@@ -549,7 +571,7 @@ function renderTimeline(id, items) {
   target.innerHTML = list.map((item, index) => `
     <div class="timeline-item">
       <div class="timeline-date">06-${String(4 + index * 5).padStart(2, "0")}</div>
-      <div><strong>${escapeHtml(item.type || "事件")}</strong> ${escapeHtml(item.event || item.name || "暂无事件")}</div>
+      <div title="${escapeHtml(text(item.event || item.name || "暂无事件", ""))}"><strong>${escapeHtml(item.type || "事件")}</strong> ${escapeHtml(truncateText(item.event || item.name || "暂无事件", 64))}</div>
     </div>
   `).join("") || `<div class="status-empty">暂无行业事件</div>`;
 }
@@ -579,8 +601,41 @@ function renderBars(id, items = []) {
   });
 }
 
+function ensureTableShell(table) {
+  if (!table || !table.parentElement) return;
+  if (table.parentElement.classList.contains("table-scroll")) return;
+  const wrapper = document.createElement("div");
+  wrapper.className = "table-scroll";
+  table.parentElement.insertBefore(wrapper, table);
+  wrapper.appendChild(table);
+}
+
+function columnWeight(header) {
+  const value = String(header || "");
+  if (/^#|排名|平台|状态|Sheet|CPE|金额|投前|投后|新增|收藏|分享|发布量|评论量|互动量|点赞|占比|搜索量|声量|讨论量/.test(value)) return 0.85;
+  if (/事件|标题|内容|正文|解读|建议|业务判断|出行机会|高热搜索词|用户需求|典型场景/.test(value)) return 1.65;
+  return 1.05;
+}
+
+function isShortColumn(header) {
+  return /^#|排名|平台|状态|Sheet|CPE|金额|投前|投后|新增|收藏|分享|发布量|评论量|互动量|点赞|占比|搜索量|声量|讨论量|信号强度/.test(String(header || ""));
+}
+
+function cellLimit(header) {
+  const value = String(header || "");
+  if (isShortColumn(value)) return 16;
+  if (/事件|标题|内容|正文|解读|建议|业务判断|出行机会/.test(value)) return 30;
+  return 22;
+}
+
 function renderTable(table, headers, rows) {
+  ensureTableShell(table);
   table.innerHTML = "";
+  const weights = headers.map(columnWeight);
+  const totalWeight = weights.reduce((sum, item) => sum + item, 0) || 1;
+  const colgroup = document.createElement("colgroup");
+  colgroup.innerHTML = weights.map((weight) => `<col style="width:${((weight / totalWeight) * 100).toFixed(3)}%">`).join("");
+  table.appendChild(colgroup);
   const thead = document.createElement("thead");
   thead.innerHTML = `<tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("")}</tr>`;
   table.appendChild(thead);
@@ -588,7 +643,12 @@ function renderTable(table, headers, rows) {
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="${headers.length}">暂无数据</td></tr>`;
   } else {
-    tbody.innerHTML = rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("");
+    tbody.innerHTML = rows.map((row) => `<tr>${row.map((cell, index) => {
+      const header = headers[index] || "";
+      const full = text(cell, "");
+      const className = isShortColumn(header) ? "cell-text short-cell" : "cell-text";
+      return `<td title="${escapeHtml(full)}"><span class="${className}">${escapeHtml(truncateText(full, cellLimit(header)))}</span></td>`;
+    }).join("")}</tr>`).join("");
   }
   table.appendChild(tbody);
 }
@@ -599,7 +659,7 @@ function joinNames(items = [], limit = 3) {
 
 function truncate(value, limit) {
   const str = String(value || "");
-  return str.length > limit ? `${str.slice(0, limit)}…` : str;
+  return str.length > limit ? `${str.slice(0, limit)}...` : str;
 }
 
 function escapeHtml(value) {
@@ -651,9 +711,18 @@ function bindEvents() {
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
-  window.addEventListener("resize", () => {
-    if (state.data) renderAll();
-  });
+  const scheduleRender = () => {
+    if (!state.data) return;
+    clearTimeout(state.resizeTimer);
+    state.resizeTimer = setTimeout(renderAll, 120);
+  };
+  window.addEventListener("resize", scheduleRender);
+  if ("ResizeObserver" in window) {
+    const shell = document.querySelector(".dashboard-shell");
+    const content = document.querySelector(".content");
+    if (shell) new ResizeObserver(scheduleRender).observe(shell);
+    if (content) new ResizeObserver(scheduleRender).observe(content);
+  }
 }
 
 function init() {

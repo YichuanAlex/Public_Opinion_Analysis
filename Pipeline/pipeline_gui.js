@@ -120,6 +120,10 @@ const els = {
   pasteCommentButton: document.querySelector("#pasteCommentButton"),
   cleanCurrentButton: document.querySelector("#cleanCurrentButton"),
   cleanAllButton: document.querySelector("#cleanAllButton"),
+  repairCurrentButton: document.querySelector("#repairCurrentButton"),
+  repairAllButton: document.querySelector("#repairAllButton"),
+  exportCommentSectionsButton: document.querySelector("#exportCommentSectionsButton"),
+  exportCommentSectionsAllButton: document.querySelector("#exportCommentSectionsAllButton"),
   openDirButton: document.querySelector("#openDirButton"),
   statusMessage: document.querySelector("#statusMessage"),
   runPill: document.querySelector("#runPill"),
@@ -201,6 +205,10 @@ function bindEvents() {
   els.pasteCommentButton.addEventListener("click", pasteAndRunComments);
   els.cleanCurrentButton.addEventListener("click", () => runCleanData("current"));
   els.cleanAllButton.addEventListener("click", () => runCleanData("all"));
+  els.repairCurrentButton.addEventListener("click", () => runRepairMonitoring("current"));
+  els.repairAllButton.addEventListener("click", () => runRepairMonitoring("all"));
+  els.exportCommentSectionsButton.addEventListener("click", () => runExportCommentSections("current"));
+  els.exportCommentSectionsAllButton.addEventListener("click", () => runExportCommentSections("all"));
   els.openDirButton.addEventListener("click", async () => {
     await fetch("/api/open-dir", { method: "POST" });
   });
@@ -331,6 +339,22 @@ function showAlert(message) {
   }
 }
 
+function formatErrorItem(error) {
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object") {
+    const noteId = error.note_id || error.noteId || error.id || "";
+    const message = error.error || error.message || JSON.stringify(error);
+    return noteId ? `${noteId}: ${message}` : message;
+  }
+  return String(error);
+}
+
+function formatErrors(errors, separator = " | ") {
+  return (errors || []).map(formatErrorItem).join(separator);
+}
+
 function makeError(message, alertShown = false) {
   const error = new Error(message);
   error.alertShown = alertShown;
@@ -392,6 +416,8 @@ function updateBusyUi() {
     els.commentButton,
     els.pasteCommentButton,
     els.cleanCurrentButton,
+    els.repairCurrentButton,
+    els.exportCommentSectionsButton,
   ];
   currentPlatformButtons.forEach((button) => {
     if (button) {
@@ -400,7 +426,7 @@ function updateBusyUi() {
   });
 
   const allBusy = anyPlatformBusy();
-  [els.searchAllButton, els.aiFillAllButton, els.backfillAllButton, els.cleanAllButton].forEach((button) => {
+  [els.searchAllButton, els.aiFillAllButton, els.backfillAllButton, els.cleanAllButton, els.repairAllButton, els.exportCommentSectionsAllButton].forEach((button) => {
     if (button) {
       button.disabled = allBusy;
     }
@@ -601,6 +627,37 @@ async function runCleanData(scope = "current") {
   });
 }
 
+async function runRepairMonitoring(scope = "current") {
+  const info = platformInfo();
+  const target = scope === "all" ? "小红书和抖音两条平台线" : `${info.name}平台线`;
+  const ok = window.confirm(`确认对${target}执行回源修复？\n\n系统会筛出监控表和 origin_data 中核心字段缺失的帖子，重新访问平台补齐“笔记内容/标题/作者/互动量/发布时间”等字段，并写回对应总表。默认不限制回源条数，请确保账号当前可正常浏览。`);
+  if (!ok) {
+    return;
+  }
+  await runJob(scope === "all" ? "repair-all" : "repair-current", scope === "all" ? "/api/repair-monitoring-all" : "/api/repair-monitoring", {
+    platform: scope === "all" ? "all" : selectedPlatform,
+    scope,
+    headed: true,
+    maxRefresh: 0,
+  });
+}
+
+async function runExportCommentSections(scope = "current") {
+  const info = platformInfo();
+  const target = scope === "all" ? "小红书和抖音两张监控总表" : `${info.name}监控总表`;
+  const ok = window.confirm(`确认按${target}批量导出评论区 XLSX？\n\n默认会完整导出每条帖子的评论区，不设置评论数量上限；已存在的帖子评论文件会自动跳过，以减少重复访问和风控风险。`);
+  if (!ok) {
+    return;
+  }
+  await runJob(scope === "all" ? "comment-sections-all" : "comment-sections-current", scope === "all" ? "/api/export-comment-sections-all" : "/api/export-comment-sections", {
+    platform: scope === "all" ? "all" : selectedPlatform,
+    scope,
+    headed: true,
+    maxPostsPerPlatform: 0,
+    limitComments: 0,
+  });
+}
+
 async function runJob(kind, endpoint, payload) {
   if (isAiKind(kind)) {
     return runStreamingJob(kind, isParallelAiKind(kind) ? "/api/ai-fill-all-stream" : "/api/ai-fill-stream", payload);
@@ -630,12 +687,27 @@ async function runJob(kind, endpoint, payload) {
       throw makeError(message);
     }
     if (Array.isArray(data.errors) && data.errors.length) {
-      showAlert(data.errors.join("\n"));
+      showAlert(formatErrors(data.errors, "\n"));
     }
     const added = Number(data.aiUpdated ?? data.commentRows ?? data.dataRows ?? data.originRows ?? data.count ?? 0);
-    if (isParallelKind(kind) && !isCleanKind(kind)) {
+    if (isRepairKind(kind)) {
+      const refresh = data.refresh || {};
+      const candidates = data.refreshCandidates ?? refresh.refreshCandidates ?? 0;
+      const attempted = data.refreshAttempted ?? refresh.refreshAttempted ?? 0;
+      const succeeded = data.refreshSucceeded ?? refresh.refreshSucceeded ?? 0;
+      const failed = data.refreshFailed ?? refresh.refreshFailed ?? 0;
       setStatus(
-        `${label}完成。\n追加全量 ${data.originRows ?? 0} 行，追加监控 ${data.dataRows ?? 0} 行，AI填写 ${data.aiUpdated ?? 0} 行，失败 ${data.failedAiRows ?? 0} 行。\n${(data.errors || []).length ? `部分错误：${data.errors.join(" | ")}` : "双平台均已完成。"}`,
+        `${label}完成。\n回源候选 ${candidates} 条，尝试 ${attempted} 条，成功 ${succeeded} 条，失败 ${failed} 条。\n监控写回 ${data.tableChangedRows ?? 0} 行，origin写回 ${data.originChangedRows ?? 0} 行，origin新增 ${data.originAppendedRows ?? 0} 行。`,
+        failed ? "error" : "done"
+      );
+    } else if (isCommentSectionExportKind(kind)) {
+      setStatus(
+        `${label}完成。\n候选帖子 ${data.candidatePosts ?? 0} 条，导出 ${data.exported ?? 0} 个评论文件，已存在跳过 ${data.skippedExisting ?? 0} 个，预览跳过 ${data.skippedDryRun ?? 0} 个。\n${data.log ? `日志：${data.log}` : "评论区文件已写入 Comment_Data 对应平台目录。"}`,
+        "done"
+      );
+    } else if (isParallelKind(kind) && !isCleanKind(kind)) {
+      setStatus(
+        `${label}完成。\n追加全量 ${data.originRows ?? 0} 行，追加监控 ${data.dataRows ?? 0} 行，AI填写 ${data.aiUpdated ?? 0} 行，失败 ${data.failedAiRows ?? 0} 行。\n${(data.errors || []).length ? `部分错误：${formatErrors(data.errors)}` : "双平台均已完成。"}`,
         "done"
       );
     } else if (isAmplificationKind(kind)) {
@@ -854,6 +926,18 @@ function getKindLabel(kind) {
   if (kind === "clean-all") {
     return "双平台去重/脏数据清洗";
   }
+  if (kind === "repair-current") {
+    return "当前平台回源修复核心字段";
+  }
+  if (kind === "repair-all") {
+    return "双平台并行回源修复核心字段";
+  }
+  if (kind === "comment-sections-current") {
+    return "当前平台评论区XLSX导出";
+  }
+  if (kind === "comment-sections-all") {
+    return "双平台并行评论区XLSX导出";
+  }
   return "单帖子单查询";
 }
 
@@ -863,6 +947,14 @@ function isCommentKind(kind) {
 
 function isCleanKind(kind) {
   return kind === "clean-current" || kind === "clean-all";
+}
+
+function isRepairKind(kind) {
+  return kind === "repair-current" || kind === "repair-all";
+}
+
+function isCommentSectionExportKind(kind) {
+  return kind === "comment-sections-current" || kind === "comment-sections-all";
 }
 
 function isAiKind(kind) {
@@ -878,7 +970,7 @@ function isAmplificationKind(kind) {
 }
 
 function isParallelKind(kind) {
-  return kind === "search-all" || kind === "ai-fill-all" || kind === "backfill-all" || kind === "clean-all";
+  return kind === "search-all" || kind === "ai-fill-all" || kind === "backfill-all" || kind === "clean-all" || kind === "repair-all" || kind === "comment-sections-all";
 }
 
 function buildSuccessLog(label, data) {
@@ -893,9 +985,33 @@ function buildSuccessLog(label, data) {
     data.removedDuplicateRows !== undefined ? `删除重复行数：${data.removedDuplicateRows}` : "",
     data.removedDirtyRows !== undefined ? `删除脏数据行数：${data.removedDirtyRows}` : "",
     data.filledNoteIds !== undefined ? `补齐笔记ID行数：${data.filledNoteIds}` : "",
+    data.tableChangedRows !== undefined ? `回源修复监控表写回行数：${data.tableChangedRows}` : "",
+    data.originChangedRows !== undefined ? `回源修复origin写回行数：${data.originChangedRows}` : "",
+    data.originAppendedRows !== undefined ? `回源修复origin新增行数：${data.originAppendedRows}` : "",
+    data.refresh ? `回源修复统计：候选 ${data.refresh.refreshCandidates ?? 0}，尝试 ${data.refresh.refreshAttempted ?? 0}，成功 ${data.refresh.refreshSucceeded ?? 0}，失败 ${data.refresh.refreshFailed ?? 0}` : "",
+    data.refreshCandidates !== undefined ? `双平台回源候选：${data.refreshCandidates}` : "",
+    data.refreshAttempted !== undefined ? `双平台回源尝试：${data.refreshAttempted}` : "",
+    data.refreshSucceeded !== undefined ? `双平台回源成功：${data.refreshSucceeded}` : "",
+    data.refreshFailed !== undefined ? `双平台回源失败：${data.refreshFailed}` : "",
+    data.candidatePosts !== undefined ? `评论区导出候选帖子：${data.candidatePosts}` : "",
+    data.exported !== undefined ? `评论区XLSX导出文件数：${data.exported}` : "",
+    data.skippedExisting !== undefined ? `评论区已存在跳过：${data.skippedExisting}` : "",
+    data.skippedDryRun !== undefined ? `评论区预览跳过：${data.skippedDryRun}` : "",
+    data.resetOutput !== undefined ? `评论区是否清空旧文件：${data.resetOutput ? "是" : "否"}` : "",
+    data.log ? `评论区导出日志：${data.log}` : "",
+    Array.isArray(data.files) && data.files.length ? `评论区文件样例：${data.files.slice(0, 12).join(" | ")}${data.files.length > 12 ? ` | 还有 ${data.files.length - 12} 个未展开` : ""}` : "",
     Array.isArray(data.tables) && data.tables.length ? `清洗表格：${data.tables.join("，")}` : "",
     Array.isArray(data.backups) && data.backups.length ? `备份文件：${data.backups.join("，")}` : "",
     Array.isArray(data.results) && data.results.length ? `平台明细：${data.results.map((item) => `${item.platformName || item.platform}: 全量${item.originRows ?? 0}, 监控${item.dataRows ?? 0}, 评论${item.commentRows ?? 0}, AI${item.aiUpdated ?? 0}, 清洗${item.beforeRows ?? "-"}->${item.afterRows ?? "-"}`).join(" | ")}` : "",
+    Array.isArray(data.results) && data.results.some((item) => item.refresh || item.tableChangedRows !== undefined)
+      ? `双平台回源修复明细：\n${data.results.map((item) => {
+        const refresh = item.refresh || {};
+        return `【${item.platformName || item.platform}】候选${refresh.refreshCandidates ?? item.refreshCandidates ?? 0}，尝试${refresh.refreshAttempted ?? item.refreshAttempted ?? 0}，成功${refresh.refreshSucceeded ?? item.refreshSucceeded ?? 0}，失败${refresh.refreshFailed ?? item.refreshFailed ?? 0}；监控写回${item.tableChangedRows ?? 0}，origin写回${item.originChangedRows ?? 0}，origin新增${item.originAppendedRows ?? 0}`;
+      }).join("\n")}`
+      : "",
+    Array.isArray(data.results) && data.results.some((item) => item.candidatePosts !== undefined || item.exported !== undefined)
+      ? `双平台评论区XLSX导出明细：\n${data.results.map((item) => `【${item.platformName || item.platform}】候选${item.candidatePosts ?? 0}，导出${item.exported ?? 0}，已存在跳过${item.skippedExisting ?? 0}，预览跳过${item.skippedDryRun ?? 0}${item.log ? `；日志 ${item.log}` : ""}`).join("\n")}`
+      : "",
     Array.isArray(data.results) && data.results.some((item) => item.writeDetails?.length)
       ? `双平台全量字段写入明细：\n${data.results.flatMap((item) => (item.writeDetails || []).map((line) => `【${item.platformName || item.platform}】${line}`)).join("\n")}`
       : "",
@@ -953,7 +1069,7 @@ function buildSuccessLog(label, data) {
     Array.isArray(data.excelWriteDetails) && data.excelWriteDetails.length ? `Excel字段写入明细：\n${data.excelWriteDetails.join("\n")}` : "",
     data.excelWriteDetailsOmitted ? `Excel字段写入明细还有 ${data.excelWriteDetailsOmitted} 行未展开。` : "",
     Array.isArray(data.preview) && data.preview.length ? `预览：${data.preview.map((item) => `${item.发布时间} ${item.标题}【${item.判断}/${item.值得分}】`).join(" | ")}` : "",
-    Array.isArray(data.errors) && data.errors.length ? `错误样例：${data.errors.join(" | ")}` : "",
+    Array.isArray(data.errors) && data.errors.length ? `错误样例：${formatErrors(data.errors)}` : "",
     data.tempOrigin ? `临时全量文件：${data.tempOrigin}` : "",
     data.tempSummary ? `临时10字段文件：${data.tempSummary}` : "",
     data.tempComments ? `临时评论文件：${data.tempComments}` : "",

@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-06-30 12:24:21",
+  "dryRun": true,
+  "results": [
+    {
+      "platform": "xhs",
+      "platformName": "小红书",
+      "candidatePosts": 1,
+      "exported": 0,
+      "skippedExisting": 1,
+      "skippedDryRun": 0,
+      "resetOutput": false,
+      "errors": [],
+      "files": [
+        "/Users/didi/Downloads/Public_Opinion_Analysis/Comment_Data/xhs/69aed3b3000000000d00b321.xlsx"
+      ]
+    }
+  ]
+}

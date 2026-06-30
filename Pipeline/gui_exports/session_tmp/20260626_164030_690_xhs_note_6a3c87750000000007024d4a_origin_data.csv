@@ -1,0 +1,81 @@
+﻿source_url,note_id,xsec_source,current_time,cursor_score,items.0.model_type,items.0.note_card.interact_info.followed,items.0.note_card.interact_info.relation,items.0.note_card.interact_info.liked,items.0.note_card.interact_info.liked_count,items.0.note_card.interact_info.collected,items.0.note_card.interact_info.collected_count,items.0.note_card.interact_info.comment_count,items.0.note_card.interact_info.share_count,items.0.note_card.note_id,items.0.note_card.tag_list.0.id,items.0.note_card.tag_list.0.name,items.0.note_card.tag_list.0.type,items.0.note_card.tag_list.1.name,items.0.note_card.tag_list.1.type,items.0.note_card.tag_list.1.id,items.0.note_card.tag_list.2.id,items.0.note_card.tag_list.2.name,items.0.note_card.tag_list.2.type,items.0.note_card.tag_list.3.type,items.0.note_card.tag_list.3.id,items.0.note_card.tag_list.3.name,items.0.note_card.time,items.0.note_card.share_info.un_share,items.0.note_card.illegal_info.desc,items.0.note_card.illegal_info.left_icon,items.0.note_card.illegal_info.link,items.0.note_card.title,items.0.note_card.desc,items.0.note_card.user.user_id,items.0.note_card.user.nickname,items.0.note_card.user.avatar,items.0.note_card.user.xsec_token,items.0.note_card.at_user_list,items.0.note_card.type,items.0.note_card.image_list.0.width,items.0.note_card.image_list.0.trace_id,items.0.note_card.image_list.0.url_default,items.0.note_card.image_list.0.stream,items.0.note_card.image_list.0.file_id,items.0.note_card.image_list.0.height,items.0.note_card.image_list.0.url,items.0.note_card.image_list.0.info_list.0.image_scene,items.0.note_card.image_list.0.info_list.0.url,items.0.note_card.image_list.0.info_list.1.image_scene,items.0.note_card.image_list.0.info_list.1.url,items.0.note_card.image_list.0.url_pre,items.0.note_card.image_list.0.live_photo,items.0.note_card.last_update_time,items.0.note_card.ip_location,items.0.id,raw_json,media_enrichment.image_count,media_enrichment.transcript_source_count,media_enrichment.image_ocr_text,media_enrichment.video_transcript,media_enrichment.errors
+https://www.xiaohongshu.com/discovery/item/6a3c87750000000007024d4a?source=webshare&xhsshare=pc_web&xsec_token=CB-ypP0LteVzTXcUHWLSt1PVZtGN4hdM-BqTrpo7FUUIg=&xsec_source=pc_share,6a3c87750000000007024d4a,pc_share,1782463249317,,note,False,none,False,2,False,2,74,,6a3c87750000000007024d4a,63b28a25000000000100898c,滴滴打车卷,topic,滴滴券,topic,63a204a2000000000100469b,611119f2000000000100b3e2,滴滴我,topic,topic,62ab176300000000010075ef,打车券省钱,1782351733000,False,可能含AI生成内容,https://picasso-static.xiaohongshu.com/fe-platfrom/bc740cc162107169b504c4c1e5ee35f92eaa8456.png,xhsdiscover://rn/kuri/noteStickers?background_transparent_v2=true&needNewRootNavigation=true&noteId=6a3c87750000000007024d4a,滴滴现在有券可换,"滴滴打车互换券
+有人现在用吗？十点左右送我一张#滴滴打车卷[话题]##滴滴券[话题]##滴滴我[话题]##打车券省钱[话题]#",5ab49d204eacab078f8db5fe,小杨在摸鱼,https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo311ebeqt06m004a3r6cei1dfu1flca88,ABP99WBbzslLnSLmkf8pi2rxH_cR8Z5Y3MOYwXscTazl4=,[],normal,1284,,http://sns-webpic-qc.xhscdn.com/202606261640/fd9df9f5f4002d8f74d2329bcf682316/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_dft_wlteh_webp_3,{},1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8,2590,,WB_PRV,http://sns-webpic-qc.xhscdn.com/202606261640/dcfad750b22b9deebb7f31b879e26909/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_prv_wlteh_webp_3,WB_DFT,http://sns-webpic-qc.xhscdn.com/202606261640/fd9df9f5f4002d8f74d2329bcf682316/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_dft_wlteh_webp_3,http://sns-webpic-qc.xhscdn.com/202606261640/dcfad750b22b9deebb7f31b879e26909/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_prv_wlteh_webp_3,False,1782351733000,湖南,6a3c87750000000007024d4a,"{""current_time"":1782463249317,""cursor_score"":"""",""items"":[{""model_type"":""note"",""note_card"":{""interact_info"":{""followed"":false,""relation"":""none"",""liked"":false,""liked_count"":""2"",""collected"":false,""collected_count"":""2"",""comment_count"":""74"",""share_count"":""""},""note_id"":""6a3c87750000000007024d4a"",""tag_list"":[{""id"":""63b28a25000000000100898c"",""name"":""滴滴打车卷"",""type"":""topic""},{""name"":""滴滴券"",""type"":""topic"",""id"":""63a204a2000000000100469b""},{""id"":""611119f2000000000100b3e2"",""name"":""滴滴我"",""type"":""topic""},{""type"":""topic"",""id"":""62ab176300000000010075ef"",""name"":""打车券省钱""}],""time"":1782351733000,""share_info"":{""un_share"":false},""illegal_info"":{""desc"":""可能含AI生成内容"",""left_icon"":""https://picasso-static.xiaohongshu.com/fe-platfrom/bc740cc162107169b504c4c1e5ee35f92eaa8456.png"",""link"":""xhsdiscover://rn/kuri/noteStickers?background_transparent_v2=true&needNewRootNavigation=true&noteId=6a3c87750000000007024d4a""},""title"":""滴滴现在有券可换"",""desc"":""滴滴打车互换券\n有人现在用吗？十点左右送我一张#滴滴打车卷[话题]##滴滴券[话题]##滴滴我[话题]##打车券省钱[话题]#"",""user"":{""user_id"":""5ab49d204eacab078f8db5fe"",""nickname"":""小杨在摸鱼"",""avatar"":""https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo311ebeqt06m004a3r6cei1dfu1flca88"",""xsec_token"":""ABP99WBbzslLnSLmkf8pi2rxH_cR8Z5Y3MOYwXscTazl4=""},""at_user_list"":[],""type"":""normal"",""image_list"":[{""width"":1284,""trace_id"":"""",""url_default"":""http://sns-webpic-qc.xhscdn.com/202606261640/fd9df9f5f4002d8f74d2329bcf682316/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_dft_wlteh_webp_3"",""stream"":{},""file_id"":""1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8"",""height"":2590,""url"":"""",""info_list"":[{""image_scene"":""WB_PRV"",""url"":""http://sns-webpic-qc.xhscdn.com/202606261640/dcfad750b22b9deebb7f31b879e26909/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_prv_wlteh_webp_3""},{""image_scene"":""WB_DFT"",""url"":""http://sns-webpic-qc.xhscdn.com/202606261640/fd9df9f5f4002d8f74d2329bcf682316/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_dft_wlteh_webp_3""}],""url_pre"":""http://sns-webpic-qc.xhscdn.com/202606261640/dcfad750b22b9deebb7f31b879e26909/1040g2sg321qpnmscnas04a3r6cei1dfu6gf40i8!nd_prv_wlteh_webp_3"",""live_photo"":false}],""last_update_time"":1782351733000,""ip_location"":""湖南""},""id"":""6a3c87750000000007024d4a""}]}",2,0,"【第1张图片中的文字内容】
+滴荡出行网约车青要代育人
+王安字8/年
+今日完成1单已得
+已完成
+限自己用
+折
+今日16点后可用
+去使用
+限送好友
+5折×3
+无门槛
+晒送好友
+每人每天限参与一次，每日领取任务后完成一单快车/特惠快车/惊喜特价/甄选快车/六座快车订
+单得优惠券限特惠快车可用，具体以规则页为准
+我的券 适好友，可能会被TA回送 5折券哦～
+限送好友
+5折
+25:34:16后到期
+吣送好友
+限送好友
+5折
+25:34:16后到期
+龜送好友
+限送好友
+5折
+47:54:13后到期
+吣送好友
+用AI叫车首单7折
+立即叫车
+*限AI叫车新用户，详见规则
+7折
+最高減10元
+努力守护 乘车清凉
+戳我查看
+图片由ai生成
+×〇滴滴出行
+美成 花
+送你10万朵栀子花
+
+【第2张图片中的文字内容】
+王安宇书年
+今日完成1单已得
+已完成
+限自己用
+也豐
+折
+今日16点后可用
+限送好友
+5折×3
+无门槛
+去使用
+晒送好友
+每人每天限參与一次，每日领以任务后完成一单快车/特惠快车/惊昌特价/甄远快车/六座快车订
+单得优惠券限特惠快车可用，具体以规则页为准
+我的券 迈好友，可能会被TA回送 5折券哦～
+限送好友
+5折
+25:34 16后到期
+4送好友
+限送好友
+5折
+25 3416后到期
+送好友
+限送好友
+5折
+47:54:13后到期
+4送好友
+用AI叫车首单7折
+立即叫车
+*眼AJNH市斷限户，详见覺则
+7折
+1T0元
+努力守护 乘车清凉
+戳我查看
+图片中国生
+美成不花
+C 海商出行
+送你10万朵栀子花",,

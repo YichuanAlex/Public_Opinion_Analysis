@@ -1,0 +1,792 @@
+{
+  "generatedAt": "2026-06-30 12:24:38",
+  "project": "/Users/didi/Downloads/Public_Opinion_Analysis",
+  "results": [
+    {
+      "platform": "xhs",
+      "platformName": "小红书",
+      "table": "/Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv",
+      "origin": "/Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/xhs_origin_data.csv",
+      "rows": 2619,
+      "originRows": 3125,
+      "originIndexed": 3017,
+      "commentIndexed": 981,
+      "tableChangedRows": 2615,
+      "originChangedRows": 12,
+      "originAppendedRows": 2,
+      "refresh": {
+        "refreshCandidates": 0,
+        "refreshLimit": 0,
+        "refreshAttempted": 0,
+        "refreshSucceeded": 0,
+        "refreshFailed": 0
+      },
+      "tableFieldUpdates": {
+        "笔记ID": 2615
+      },
+      "originFieldUpdates": {
+        "repair.comment_rows": 8,
+        "repair.comment_file": 8,
+        "repair.发布时间": 9,
+        "repair.笔记标题": 7,
+        "repair.笔记链接": 9,
+        "repair.笔记内容": 9,
+        "repair.点赞量": 8,
+        "repair.收藏量": 7,
+        "repair.评论量": 9,
+        "repair.分享量": 5,
+        "repair.互动量": 9,
+        "repair.博主昵称": 9,
+        "repair.渠道类型": 9,
+        "repair.笔记ID": 9
+      },
+      "unresolvedSampleBeforeRefresh": [
+        {
+          "row": 828,
+          "note_id": "69e61caf000000001a0213c8",
+          "missing": [
+            "笔记内容"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/69e61caf000000001a0213c8?xsec_token=ABmBcRQSHJbWmv0ZhzZw_7THJf33_3aB9o4vxngzCO5cg="
+        },
+        {
+          "row": 1225,
+          "note_id": "69fec688000000003502e7ac",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/69fec688000000003502e7ac?xsec_token=AB7ukW7fajRnxFsjbDV6X4qFabbM4qtq1v1hXM4EB43GM=&xsec_source=pc_search"
+        },
+        {
+          "row": 1232,
+          "note_id": "69fd3b05000000003601ef4b",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/69fd3b05000000003601ef4b?xsec_token=ABNbFDvmT2gE-NxXGweO_FYNUhYxbUbNrBPJaY_wjNYbk=&xsec_source=pc_search"
+        },
+        {
+          "row": 1249,
+          "note_id": "6a0168e70000000008024d41",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0168e70000000008024d41?xsec_token=ABMDY_ifAXf43glQ4iD8PYNTDLU8WxtsTnkTABvyjlLnQ=&xsec_source=pc_search"
+        },
+        {
+          "row": 1251,
+          "note_id": "6a02a86800000000070130aa",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a02a86800000000070130aa?xsec_token=AB7U6zAAB-FbTocf-dL8C5T5OiIULUabftGK25BLSoZ4A=&xsec_source=pc_search"
+        },
+        {
+          "row": 1263,
+          "note_id": "6a01b66d000000003701f403",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a01b66d000000003701f403?xsec_token=ABMDY_ifAXf43glQ4iD8PYNcSArOUD9C0kt5TPWSqUglQ=&xsec_source=pc_search"
+        },
+        {
+          "row": 1265,
+          "note_id": "6a03e0fd0000000037036077",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a03e0fd0000000037036077?xsec_token=ABUGydpp8sZT7bGqSkfVTRrJKQnwwOUt6FOIBbv-cBReo=&xsec_source=pc_search"
+        },
+        {
+          "row": 1268,
+          "note_id": "6a032585000000003601e2e4",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a032585000000003601e2e4?xsec_token=ABUGydpp8sZT7bGqSkfVTRrLcrgQVazMxq3P9LyCozxDg=&xsec_source=pc_search"
+        },
+        {
+          "row": 1270,
+          "note_id": "6a0309c9000000000702ba1d",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0309c9000000000702ba1d?xsec_token=ABUGydpp8sZT7bGqSkfVTRrHOardMFWCUl-1sYJExJj5E=&xsec_source=pc_search"
+        },
+        {
+          "row": 1271,
+          "note_id": "6a0306970000000007025d69",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0306970000000007025d69?xsec_token=ABUGydpp8sZT7bGqSkfVTRrE1s555jV7t8POoojy1gKpw=&xsec_source=pc_search"
+        },
+        {
+          "row": 1277,
+          "note_id": "6a037fa70000000035022e26",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a037fa70000000035022e26?xsec_token=ABUGydpp8sZT7bGqSkfVTRrJFoqYD3q-walf-FtkB-Puw=&xsec_source=pc_search"
+        },
+        {
+          "row": 1292,
+          "note_id": "6a051d5d0000000008002344",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a051d5d0000000008002344?xsec_token=ABdRAD_phk1WlZetOXGBETlQFqUMJMv3LEXdaIBrgtvrQ=&xsec_source=pc_search"
+        },
+        {
+          "row": 1312,
+          "note_id": "6a043c95000000000702a639",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a043c95000000000702a639?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyWakJc0sntiMbpF8KDYe8yo=&xsec_source=pc_search"
+        },
+        {
+          "row": 1314,
+          "note_id": "6a043a3f000000003502734f",
+          "missing": [
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a043a3f000000003502734f?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyc7i4tXIkQK4n0OWUsJlxFg=&xsec_source=pc_search&source=web_note_detail_r10"
+        },
+        {
+          "row": 1316,
+          "note_id": "6a0437f600000000070122fd",
+          "missing": [
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0437f600000000070122fd?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyaqzX_0syO4UU72X5pnSLog=&xsec_source=pc_search&source=web_note_detail_r10"
+        },
+        {
+          "row": 1319,
+          "note_id": "6a041bbf0000000038037d42",
+          "missing": [
+            "笔记标题",
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a041bbf0000000038037d42?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyekuWpqAfJnKvoyHP5H9I9E=&xsec_source=pc_search&source=web_search_result_notes"
+        },
+        {
+          "row": 1320,
+          "note_id": "6a0445a500000000060312f3",
+          "missing": [
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0445a500000000060312f3?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyYlwu49Kip7fPWG2P-_GdnY=&xsec_source=pc_search&source=web_explore_feed"
+        },
+        {
+          "row": 1327,
+          "note_id": "6a05a0f4000000003503b125",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a05a0f4000000003503b125?xsec_token=ABdRAD_phk1WlZetOXGBETleMMUgs_SbsS7QpyZzc3Uzs=&xsec_source=pc_search"
+        },
+        {
+          "row": 1334,
+          "note_id": "6a0664f6000000003502acbb",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0664f6000000003502acbb?xsec_token=ABF4WiDXg8Pi1jz4lpjc8ywrVTApMHWV7VVyIXIkriINk=&xsec_source=pc_search"
+        },
+        {
+          "row": 1340,
+          "note_id": "6a058c5f0000000008031a43",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a058c5f0000000008031a43?xsec_token=ABdRAD_phk1WlZetOXGBETlWEjX1gtpkD4B6xMbBEenYg=&xsec_source=pc_search"
+        },
+        {
+          "row": 1346,
+          "note_id": "6a0569e400000000380348c9",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0569e400000000380348c9?xsec_token=ABdRAD_phk1WlZetOXGBETlZ3BRTtUNbqxNCPS6fcZmeo=&xsec_source=pc_search"
+        },
+        {
+          "row": 1349,
+          "note_id": "6a0684780000000035023884",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0684780000000035023884?xsec_token=ABF4WiDXg8Pi1jz4lpjc8ywk-_3QQ36k-fTx8-C6j6F6E=&xsec_source=pc_search"
+        },
+        {
+          "row": 1356,
+          "note_id": "6a055787000000003503390b",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a055787000000003503390b?xsec_token=ABdRAD_phk1WlZetOXGBETlb-8rwT2P8nhoQeHxJg2Fhc=&xsec_source=pc_search"
+        },
+        {
+          "row": 1370,
+          "note_id": "6a06cd390000000038035567",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a06cd390000000038035567?xsec_token=ABF4WiDXg8Pi1jz4lpjc8ywrPjjbs-s6rDskQC_ToqIjI=&xsec_source=pc_search"
+        },
+        {
+          "row": 1395,
+          "note_id": "6a0a7682000000003601a2ab",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0a7682000000003601a2ab?xsec_token=ABXsMAH3_c_Jiz-dW_lpYzVuJXVNzwlOf9PcJ2ovheOBs=&xsec_source=pc_search"
+        },
+        {
+          "row": 1397,
+          "note_id": "6a09093c000000003601b274",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a09093c000000003601b274?xsec_token=ABS0olrbQMv7YrMtX5hv7upb9Zep4uSkRQqSjGJgWBbnw=&xsec_source=pc_search"
+        },
+        {
+          "row": 1404,
+          "note_id": "6a09bfbd000000000702fec1",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a09bfbd000000000702fec1?xsec_token=ABS0olrbQMv7YrMtX5hv7upSoOxbtqtXJArNaIx0k3TyA=&xsec_source=pc_search"
+        },
+        {
+          "row": 1411,
+          "note_id": "6a096fb2000000003700cd51",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a096fb2000000003700cd51?xsec_token=ABS0olrbQMv7YrMtX5hv7upfsWI5yeETHVdvEXWkm-Owc=&xsec_source=pc_search"
+        },
+        {
+          "row": 1418,
+          "note_id": "6a0b947800000000380235f5",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0b947800000000380235f5?xsec_token=ABSh5LZ7oqI4X51MmHsTwJ28VMUBEyuMJ_8bkplO54U2g=&xsec_source=pc_search"
+        },
+        {
+          "row": 1422,
+          "note_id": "6a0adee20000000007021b13",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0adee20000000007021b13?xsec_token=ABXsMAH3_c_Jiz-dW_lpYzVk9C2PgihAzVBKOJP5Yb2I8=&xsec_source=pc_search"
+        }
+      ],
+      "unresolvedSample": [
+        {
+          "row": 828,
+          "note_id": "69e61caf000000001a0213c8",
+          "missing": [
+            "笔记内容"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/69e61caf000000001a0213c8?xsec_token=ABmBcRQSHJbWmv0ZhzZw_7THJf33_3aB9o4vxngzCO5cg="
+        },
+        {
+          "row": 1225,
+          "note_id": "69fec688000000003502e7ac",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/69fec688000000003502e7ac?xsec_token=AB7ukW7fajRnxFsjbDV6X4qFabbM4qtq1v1hXM4EB43GM=&xsec_source=pc_search"
+        },
+        {
+          "row": 1232,
+          "note_id": "69fd3b05000000003601ef4b",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/69fd3b05000000003601ef4b?xsec_token=ABNbFDvmT2gE-NxXGweO_FYNUhYxbUbNrBPJaY_wjNYbk=&xsec_source=pc_search"
+        },
+        {
+          "row": 1249,
+          "note_id": "6a0168e70000000008024d41",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0168e70000000008024d41?xsec_token=ABMDY_ifAXf43glQ4iD8PYNTDLU8WxtsTnkTABvyjlLnQ=&xsec_source=pc_search"
+        },
+        {
+          "row": 1251,
+          "note_id": "6a02a86800000000070130aa",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a02a86800000000070130aa?xsec_token=AB7U6zAAB-FbTocf-dL8C5T5OiIULUabftGK25BLSoZ4A=&xsec_source=pc_search"
+        },
+        {
+          "row": 1263,
+          "note_id": "6a01b66d000000003701f403",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a01b66d000000003701f403?xsec_token=ABMDY_ifAXf43glQ4iD8PYNcSArOUD9C0kt5TPWSqUglQ=&xsec_source=pc_search"
+        },
+        {
+          "row": 1265,
+          "note_id": "6a03e0fd0000000037036077",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a03e0fd0000000037036077?xsec_token=ABUGydpp8sZT7bGqSkfVTRrJKQnwwOUt6FOIBbv-cBReo=&xsec_source=pc_search"
+        },
+        {
+          "row": 1268,
+          "note_id": "6a032585000000003601e2e4",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a032585000000003601e2e4?xsec_token=ABUGydpp8sZT7bGqSkfVTRrLcrgQVazMxq3P9LyCozxDg=&xsec_source=pc_search"
+        },
+        {
+          "row": 1270,
+          "note_id": "6a0309c9000000000702ba1d",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0309c9000000000702ba1d?xsec_token=ABUGydpp8sZT7bGqSkfVTRrHOardMFWCUl-1sYJExJj5E=&xsec_source=pc_search"
+        },
+        {
+          "row": 1271,
+          "note_id": "6a0306970000000007025d69",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0306970000000007025d69?xsec_token=ABUGydpp8sZT7bGqSkfVTRrE1s555jV7t8POoojy1gKpw=&xsec_source=pc_search"
+        },
+        {
+          "row": 1277,
+          "note_id": "6a037fa70000000035022e26",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a037fa70000000035022e26?xsec_token=ABUGydpp8sZT7bGqSkfVTRrJFoqYD3q-walf-FtkB-Puw=&xsec_source=pc_search"
+        },
+        {
+          "row": 1292,
+          "note_id": "6a051d5d0000000008002344",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a051d5d0000000008002344?xsec_token=ABdRAD_phk1WlZetOXGBETlQFqUMJMv3LEXdaIBrgtvrQ=&xsec_source=pc_search"
+        },
+        {
+          "row": 1312,
+          "note_id": "6a043c95000000000702a639",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a043c95000000000702a639?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyWakJc0sntiMbpF8KDYe8yo=&xsec_source=pc_search"
+        },
+        {
+          "row": 1314,
+          "note_id": "6a043a3f000000003502734f",
+          "missing": [
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a043a3f000000003502734f?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyc7i4tXIkQK4n0OWUsJlxFg=&xsec_source=pc_search&source=web_note_detail_r10"
+        },
+        {
+          "row": 1316,
+          "note_id": "6a0437f600000000070122fd",
+          "missing": [
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0437f600000000070122fd?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyaqzX_0syO4UU72X5pnSLog=&xsec_source=pc_search&source=web_note_detail_r10"
+        },
+        {
+          "row": 1319,
+          "note_id": "6a041bbf0000000038037d42",
+          "missing": [
+            "笔记标题",
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a041bbf0000000038037d42?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyekuWpqAfJnKvoyHP5H9I9E=&xsec_source=pc_search&source=web_search_result_notes"
+        },
+        {
+          "row": 1320,
+          "note_id": "6a0445a500000000060312f3",
+          "missing": [
+            "评论量"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0445a500000000060312f3?xsec_token=AB19yGNDIZJ8ti3fP2rXuFyYlwu49Kip7fPWG2P-_GdnY=&xsec_source=pc_search&source=web_explore_feed"
+        },
+        {
+          "row": 1327,
+          "note_id": "6a05a0f4000000003503b125",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a05a0f4000000003503b125?xsec_token=ABdRAD_phk1WlZetOXGBETleMMUgs_SbsS7QpyZzc3Uzs=&xsec_source=pc_search"
+        },
+        {
+          "row": 1334,
+          "note_id": "6a0664f6000000003502acbb",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0664f6000000003502acbb?xsec_token=ABF4WiDXg8Pi1jz4lpjc8ywrVTApMHWV7VVyIXIkriINk=&xsec_source=pc_search"
+        },
+        {
+          "row": 1340,
+          "note_id": "6a058c5f0000000008031a43",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a058c5f0000000008031a43?xsec_token=ABdRAD_phk1WlZetOXGBETlWEjX1gtpkD4B6xMbBEenYg=&xsec_source=pc_search"
+        },
+        {
+          "row": 1346,
+          "note_id": "6a0569e400000000380348c9",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0569e400000000380348c9?xsec_token=ABdRAD_phk1WlZetOXGBETlZ3BRTtUNbqxNCPS6fcZmeo=&xsec_source=pc_search"
+        },
+        {
+          "row": 1349,
+          "note_id": "6a0684780000000035023884",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0684780000000035023884?xsec_token=ABF4WiDXg8Pi1jz4lpjc8ywk-_3QQ36k-fTx8-C6j6F6E=&xsec_source=pc_search"
+        },
+        {
+          "row": 1356,
+          "note_id": "6a055787000000003503390b",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a055787000000003503390b?xsec_token=ABdRAD_phk1WlZetOXGBETlb-8rwT2P8nhoQeHxJg2Fhc=&xsec_source=pc_search"
+        },
+        {
+          "row": 1370,
+          "note_id": "6a06cd390000000038035567",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a06cd390000000038035567?xsec_token=ABF4WiDXg8Pi1jz4lpjc8ywrPjjbs-s6rDskQC_ToqIjI=&xsec_source=pc_search"
+        },
+        {
+          "row": 1395,
+          "note_id": "6a0a7682000000003601a2ab",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0a7682000000003601a2ab?xsec_token=ABXsMAH3_c_Jiz-dW_lpYzVuJXVNzwlOf9PcJ2ovheOBs=&xsec_source=pc_search"
+        },
+        {
+          "row": 1397,
+          "note_id": "6a09093c000000003601b274",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a09093c000000003601b274?xsec_token=ABS0olrbQMv7YrMtX5hv7upb9Zep4uSkRQqSjGJgWBbnw=&xsec_source=pc_search"
+        },
+        {
+          "row": 1404,
+          "note_id": "6a09bfbd000000000702fec1",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a09bfbd000000000702fec1?xsec_token=ABS0olrbQMv7YrMtX5hv7upSoOxbtqtXJArNaIx0k3TyA=&xsec_source=pc_search"
+        },
+        {
+          "row": 1411,
+          "note_id": "6a096fb2000000003700cd51",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a096fb2000000003700cd51?xsec_token=ABS0olrbQMv7YrMtX5hv7upfsWI5yeETHVdvEXWkm-Owc=&xsec_source=pc_search"
+        },
+        {
+          "row": 1418,
+          "note_id": "6a0b947800000000380235f5",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0b947800000000380235f5?xsec_token=ABSh5LZ7oqI4X51MmHsTwJ28VMUBEyuMJ_8bkplO54U2g=&xsec_source=pc_search"
+        },
+        {
+          "row": 1422,
+          "note_id": "6a0adee20000000007021b13",
+          "missing": [
+            "笔记标题"
+          ],
+          "link": "https://www.xiaohongshu.com/explore/6a0adee20000000007021b13?xsec_token=ABXsMAH3_c_Jiz-dW_lpYzVk9C2PgihAzVBKOJP5Yb2I8=&xsec_source=pc_search"
+        }
+      ],
+      "tableExamples": [
+        {
+          "row": 2,
+          "note_id": "69aed3b3000000000d00b321",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "遇到的滴滴司机是残障人士"
+        },
+        {
+          "row": 3,
+          "note_id": "69aea17c000000002800ba14",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "滴滴司机的时间观念有多强？"
+        },
+        {
+          "row": 4,
+          "note_id": "69ae7ee5000000001a01fcba",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "滴滴司机要求多付钱把我赶下车"
+        },
+        {
+          "row": 5,
+          "note_id": "69af7f13000000001b01f600",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "避雷滴滴数科还有滴滴打车，纯恶心人来的，在钱包界面说申请一次..."
+        },
+        {
+          "row": 6,
+          "note_id": "69ae38c4000000002801fb37",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "为什么滴滴司机不喜欢接远距离拼车单？"
+        },
+        {
+          "row": 7,
+          "note_id": "69ae1f050000000028009c37",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "订单取消后如何付钱给司机"
+        },
+        {
+          "row": 8,
+          "note_id": "69ae5096000000002801f06a",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "嫌弃狗干什么宠物专车"
+        },
+        {
+          "row": 9,
+          "note_id": "69ae1c77000000002203aad0",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "滴滴的宠物专车不如不设"
+        },
+        {
+          "row": 10,
+          "note_id": "69ada828000000002202310b",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "滴滴可以禁止臭车接客吗？"
+        },
+        {
+          "row": 11,
+          "note_id": "69af7c040000000022022bfa",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "今天打车上班"
+        },
+        {
+          "row": 12,
+          "note_id": "69af80ef000000001a028057",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "陌生人一直在用我的滴滴账号"
+        },
+        {
+          "row": 13,
+          "note_id": "69ae50ea0000000022021855",
+          "updated_fields": [
+            "笔记ID"
+          ],
+          "title": "滴滴出行夜间可以优先选择女司机了❤️"
+        }
+      ],
+      "originExamples": [
+        {
+          "row": 1031,
+          "note_id": "6a3a902a000000001702fc6e",
+          "updated_fields": [
+            "repair.comment_rows",
+            "repair.comment_file"
+          ],
+          "title": "官宣｜滴滴出行网约车青春代言人王安宇"
+        },
+        {
+          "row": 1032,
+          "note_id": "6a3a294e0000000006030fcd",
+          "updated_fields": [
+            "repair.comment_rows",
+            "repair.comment_file"
+          ],
+          "title": "「千千许愿箱」广州站保姆级出行攻略‼️"
+        },
+        {
+          "row": 2842,
+          "note_id": "6a20d7fe0000000022020fc0",
+          "updated_fields": [
+            "repair.comment_rows",
+            "repair.comment_file"
+          ],
+          "title": "滴滴女司机功能真的实用吗？"
+        },
+        {
+          "row": 3115,
+          "note_id": "6a3bac69000000000f028ff2",
+          "updated_fields": [
+            "repair.发布时间",
+            "repair.笔记标题",
+            "repair.笔记链接",
+            "repair.笔记内容",
+            "repair.点赞量",
+            "repair.收藏量",
+            "repair.评论量",
+            "repair.分享量",
+            "repair.互动量",
+            "repair.博主昵称",
+            "repair.渠道类型",
+            "repair.笔记ID"
+          ],
+          "title": "浙大研二｜努力探索杭州地图ing🗺️"
+        },
+        {
+          "row": 3116,
+          "note_id": "6a3b7657000000001003fca0",
+          "updated_fields": [
+            "repair.发布时间",
+            "repair.笔记标题",
+            "repair.笔记链接",
+            "repair.笔记内容",
+            "repair.点赞量",
+            "repair.收藏量",
+            "repair.评论量",
+            "repair.互动量",
+            "repair.博主昵称",
+            "repair.渠道类型",
+            "repair.笔记ID"
+          ],
+          "title": "带娃等飞机的幸福感❤️被滴滴会员狠狠拿捏了"
+        },
+        {
+          "row": 3117,
+          "note_id": "6a3ce7a90000000007021def",
+          "updated_fields": [
+            "repair.发布时间",
+            "repair.笔记标题",
+            "repair.笔记链接",
+            "repair.笔记内容",
+            "repair.点赞量",
+            "repair.收藏量",
+            "repair.评论量",
+            "repair.互动量",
+            "repair.博主昵称",
+            "repair.渠道类型",
+            "repair.笔记ID"
+          ],
+          "title": "根本打不到滴滴宠物专车"
+        },
+        {
+          "row": 3118,
+          "note_id": "6a3cba8b000000000702c89d",
+          "updated_fields": [
+            "repair.发布时间",
+            "repair.笔记标题",
+            "repair.笔记链接",
+            "repair.笔记内容",
+            "repair.点赞量",
+            "repair.收藏量",
+            "repair.评论量",
+            "repair.分享量",
+            "repair.互动量",
+            "repair.博主昵称",
+            "repair.渠道类型",
+            "repair.笔记ID"
+          ],
+          "title": "滴滴宠物专车完全没人接单！！！"
+        },
+        {
+          "row": 3119,
+          "note_id": "6a3caa0e000000001503f379",
+          "updated_fields": [
+            "repair.发布时间",
+            "repair.笔记链接",
+            "repair.笔记内容",
+            "repair.点赞量",
+            "repair.评论量",
+            "repair.分享量",
+            "repair.互动量",
+            "repair.博主昵称",
+            "repair.渠道类型",
+            "repair.笔记ID",
+            "repair.comment_rows",
+            "repair.comment_file"
+          ],
+          "title": ""
+        },
+        {
+          "row": 3120,
+          "note_id": "6a3d041f000000000702043f",
+          "updated_fields": [
+            "repair.发布时间",
+            "repair.笔记标题",
+            "repair.笔记链接",
+            "repair.笔记内容",
+            "repair.点赞量",
+            "repair.收藏量",
+            "repair.评论量",
+            "repair.分享量",
+            "repair.互动量",
+            "repair.博主昵称",
+            "repair.渠道类型",
+            "repair.笔记ID"
+          ],
+          "title": "是谁还没打到滴滴的足球彩蛋车"
+        },
+        {
+          "row": 3121,
+          "note_id": "6a3c87750000000007024d4a",
+          "updated_fields": [
+            "repair.发布时间",
+            "repair.笔记标题",
+            "repair.笔记链接",
+            "repair.笔记内容",
+            "repair.点赞量",
+            "repair.收藏量",
+            "repair.评论量",
+            "repair.互动量",
+            "repair.博主昵称",
+            "repair.渠道类型",
+            "repair.笔记ID",
+            "repair.comment_rows"
+          ],
+          "title": "滴滴现在有券可换"
+        }
+      ],
+      "tableBackup": "",
+      "originBackup": "",
+      "dryRun": true
+    }
+  ]
+}

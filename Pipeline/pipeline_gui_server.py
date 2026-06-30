@@ -46,6 +46,8 @@ COMMENT_SCRIPT = ROOT / "xhs_comment_to_csv.py"
 AI_FILL_SCRIPT = ROOT / "xhs_ai_fill_table.py"
 AMPLIFICATION_SCRIPT = ROOT / "xhs_amplification_export.py"
 CLEAN_SCRIPT = ROOT / "clean_monitoring_tables.py"
+REPAIR_SCRIPT = PROJECT_ROOT / "check_and_repair_monitoring_tables.py"
+COMMENT_SECTION_EXPORT_SCRIPT = ROOT / "export_comment_sections.py"
 ORIGIN_CSV = XHS_ORIGIN_CSV
 DATA_TABLE_CSV = XHS_DATA_TABLE_CSV
 COMMENT_CSV = XHS_COMMENT_CSV
@@ -868,6 +870,17 @@ def run_parallel_platforms(payload: dict, runner: Any, label: str) -> dict:
         "attemptedAiRows": sum(int(item.get("attemptedAiRows") or 0) for item in results),
         "missingAiBefore": sum(int(item.get("missingAiBefore") or 0) for item in results),
         "missingAiAfter": sum(int(item.get("missingAiAfter") or 0) for item in results),
+        "candidatePosts": sum(int(item.get("candidatePosts") or 0) for item in results),
+        "exported": sum(int(item.get("exported") or 0) for item in results),
+        "skippedExisting": sum(int(item.get("skippedExisting") or 0) for item in results),
+        "skippedDryRun": sum(int(item.get("skippedDryRun") or 0) for item in results),
+        "tableChangedRows": sum(int(item.get("tableChangedRows") or 0) for item in results),
+        "originChangedRows": sum(int(item.get("originChangedRows") or 0) for item in results),
+        "originAppendedRows": sum(int(item.get("originAppendedRows") or 0) for item in results),
+        "refreshCandidates": sum(int((item.get("refresh") or {}).get("refreshCandidates") or 0) for item in results),
+        "refreshAttempted": sum(int((item.get("refresh") or {}).get("refreshAttempted") or 0) for item in results),
+        "refreshSucceeded": sum(int((item.get("refresh") or {}).get("refreshSucceeded") or 0) for item in results),
+        "refreshFailed": sum(int((item.get("refresh") or {}).get("refreshFailed") or 0) for item in results),
     }
 
 
@@ -994,6 +1007,98 @@ def run_clean_data_parallel(payload: dict) -> dict:
     combined["backups"] = [item.get("backup", "") for item in combined["results"] if item.get("backup")]
     combined["ok"] = combined["partialOk"]
     return combined
+
+
+def flatten_single_platform_result(result: dict[str, Any]) -> dict[str, Any]:
+    items = result.get("results")
+    if isinstance(items, list) and len(items) == 1 and isinstance(items[0], dict):
+        merged = {**result, **items[0]}
+        merged["results"] = items
+        if result.get("log"):
+            merged["log"] = result.get("log")
+        return merged
+    return result
+
+
+def run_repair_monitoring(payload: dict) -> dict:
+    config = platform_config(payload)
+    max_refresh = int(payload.get("maxRefresh") if payload.get("maxRefresh") is not None else 0)
+    request_interval = float(payload.get("requestInterval") or 18.0)
+    jitter = float(payload.get("jitter") or 7.0)
+    retry = int(payload.get("retry") if payload.get("retry") is not None else 1)
+    cmd = [
+        SCRIPT_PYTHON,
+        str(REPAIR_SCRIPT),
+        "--platform",
+        config["key"],
+        "--refresh-missing",
+        "--max-refresh",
+        str(max(0, max_refresh)),
+        "--recompute-interactions",
+        "--request-interval",
+        str(max(0.0, request_interval)),
+        "--jitter",
+        str(max(0.0, jitter)),
+        "--retry",
+        str(max(0, retry)),
+    ]
+    if payload.get("headed", True):
+        cmd.append("--headed")
+    if payload.get("noMediaEnrich"):
+        cmd.append("--no-media-enrich")
+    stdout = run_checked(cmd)
+    result = flatten_single_platform_result(parse_json_stdout(stdout))
+    return {
+        "ok": True,
+        "kind": "repair-monitoring",
+        "platform": config["key"],
+        "platformName": config["name"],
+        "table": str(config["data_table_csv"]),
+        "origin": str(config["origin_csv"]),
+        "stdout": stdout,
+        **result,
+    }
+
+
+def run_export_comment_sections(payload: dict) -> dict:
+    config = platform_config(payload)
+    max_posts = int(payload.get("maxPostsPerPlatform") if payload.get("maxPostsPerPlatform") is not None else 0)
+    limit_comments = int(payload.get("limitComments") if payload.get("limitComments") is not None else 0)
+    between_posts_delay = float(payload.get("betweenPostsDelay") or 8.0)
+    cmd = [
+        SCRIPT_PYTHON,
+        str(COMMENT_SECTION_EXPORT_SCRIPT),
+        "--platform",
+        config["key"],
+        "--max-posts-per-platform",
+        str(max(0, max_posts)),
+        "--limit-comments",
+        str(max(0, limit_comments)),
+        "--between-posts-delay",
+        str(max(0.0, between_posts_delay)),
+    ]
+    if payload.get("requestInterval") not in (None, ""):
+        cmd.extend(["--request-interval", str(max(0.0, float(payload.get("requestInterval") or 0)))])
+    if payload.get("headed", True):
+        cmd.append("--headed")
+    if payload.get("overwrite"):
+        cmd.append("--overwrite")
+    if payload.get("resetOutput"):
+        cmd.append("--reset-output")
+    if payload.get("includeZeroComments"):
+        cmd.append("--include-zero-comments")
+    if payload.get("noSubComments"):
+        cmd.append("--no-sub-comments")
+    stdout = run_checked(cmd)
+    result = flatten_single_platform_result(parse_json_stdout(stdout))
+    return {
+        "ok": True,
+        "kind": "export-comment-sections",
+        "platform": config["key"],
+        "platformName": config["name"],
+        "stdout": stdout,
+        **result,
+    }
 
 
 def build_ai_fill_command(payload: dict, progress: bool = False) -> tuple[dict[str, Any], list[str]]:
@@ -1425,6 +1530,14 @@ class Handler(SimpleHTTPRequestHandler):
                 if str(payload.get("scope") or "current").strip().lower() == "all":
                     return json_response(self, 200, run_clean_data(payload))
                 return json_response(self, 200, run_locked_platform_task(payload, "去重/脏数据清洗", run_clean_data))
+            if path == "/api/repair-monitoring":
+                return json_response(self, 200, run_locked_platform_task(payload, "回源修复核心字段", run_repair_monitoring))
+            if path == "/api/repair-monitoring-all":
+                return json_response(self, 200, run_parallel_platforms(payload, run_repair_monitoring, "回源修复核心字段"))
+            if path == "/api/export-comment-sections":
+                return json_response(self, 200, run_locked_platform_task(payload, "评论区XLSX导出", run_export_comment_sections))
+            if path == "/api/export-comment-sections-all":
+                return json_response(self, 200, run_parallel_platforms(payload, run_export_comment_sections, "评论区XLSX导出"))
             if path == "/api/ai-fill-all":
                 return json_response(self, 200, run_parallel_platforms(payload, run_ai_fill, "AI填写总表" if not payload.get("noAi") else "只回填ID/互动量"))
             if path == "/api/ai-fill-all-stream":

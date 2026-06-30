@@ -1,24 +1,24 @@
 {
   "xhs": {
-    "last_index": 0
+    "last_index": 1
   },
   "profiles": {
     "chrome_19116411259": {
-      "last_used": 1782443092.146247,
+      "last_used": 1782810063.861333,
       "last_platform": "dy",
-      "last_purpose": "dy-note",
+      "last_purpose": "dy-search",
       "blocked_until": 0,
-      "use_count": 15
+      "use_count": 51
     },
     "edge_17730297792": {
-      "last_used": 1782443057.446763,
+      "last_used": 1782809311.2845938,
       "last_platform": "dy",
-      "last_purpose": "dy-note",
+      "last_purpose": "dy-search",
       "blocked_until": 0,
-      "use_count": 13
+      "use_count": 49
     }
   },
-  "updated_at": "2026-06-26 11:04:52",
+  "updated_at": "2026-06-30 17:01:03",
   "dy": {
     "last_index": 0
   }

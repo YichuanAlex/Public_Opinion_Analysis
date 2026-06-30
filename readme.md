@@ -38,6 +38,7 @@ This tool is designed for Didi-related public opinion monitoring. It supports th
 ```text
 /Users/didi/Downloads/Public_Opinion_Analysis
 ├── run_public_opinion_suite.command
+├── daily_work.py
 ├── check_and_repair_monitoring_tables.py
 ├── Visualization
 │   ├── server.py
@@ -95,6 +96,7 @@ The core folders are:
 ```text
 /Users/didi/Downloads/Public_Opinion_Analysis
 ├── run_public_opinion_suite.command  # One-click launcher for Visualization + Pipeline
+├── daily_work.py             # Unattended daily loop: search, clean, AI fill, amplification export
 ├── check_and_repair_monitoring_tables.py
 ├── Visualization             # Monthly dashboard homepage
 ├── Pipeline                 # Collection GUI, scripts, normalized CSV outputs
@@ -206,6 +208,7 @@ python3 -m pip install -r requirements.txt
 ```bash
 chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/run_pipeline_gui.command
 chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/run_public_opinion_suite.command
+chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/daily_work.py
 ```
 
 4. 如果 macOS 提示“无法打开来自未知开发者的文件”，右键点击 `run_pipeline_gui.command`，选择“打开”。
@@ -225,6 +228,7 @@ English:
 ```bash
 chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/Pipeline/run_pipeline_gui.command
 chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/run_public_opinion_suite.command
+chmod +x /Users/didi/Downloads/Public_Opinion_Analysis/daily_work.py
 ```
 
 4. If macOS blocks the file as coming from an unidentified developer, right-click `run_pipeline_gui.command` and choose Open.
@@ -339,6 +343,8 @@ bash run_public_opinion_suite.command
 
 可视化大屏右上角有“打开舆情采集工作台”按钮，会在新网页打开 Pipeline；Pipeline 左侧有“返回可视化首页”按钮。
 
+可视化大屏已经做了响应式适配：顶部筛选按钮、表格、折线图、饼图和词云会随浏览器窗口、系统缩放或侧栏宽度变化自动重排；长文本默认用 `...` 截断，鼠标悬浮可查看完整内容；各模块标题按 A/B/C 从左到右、从上到下排序。
+
 如果只想单独调试采集工作台，也可以双击：
 
 ```text
@@ -387,6 +393,8 @@ Default ports:
 | Pipeline collection workspace | `http://127.0.0.1:8766/` |
 
 The dashboard has an `打开舆情采集工作台` button in the top-right corner, which opens Pipeline in a new tab. Pipeline has a `返回可视化首页` link on the left side.
+
+The Visualization dashboard is responsive: top filters, tables, line charts, pie charts, and word clouds resize when the browser window, system zoom, or side panel width changes. Long text is truncated with `...`, and hovering shows the full value. Module headings are ordered A/B/C from left to right and top to bottom.
 
 If you only want to debug the collection workspace, double-click:
 
@@ -565,9 +573,11 @@ python3 check_and_repair_monitoring_tables.py \
 
 小红书裸链接处理：
 
-- 如果链接只有 `https://www.xiaohongshu.com/discovery/item/{note_id}`，脚本会先在本地 `xhs_origin_data.csv` 和 `xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv` 中查找同 ID 的历史 `xsec_token` 链接。
-- 找到历史 token 后会自动切换为带 `xsec_token` 的 webshare 链接。
-- 如果本地没有 token，脚本会打开页面尝试解析；若账号处于 `300013` 风控状态，应暂停采集，等网页端普通浏览恢复后再运行。
+- 如果链接只有 `https://www.xiaohongshu.com/discovery/item/{note_id}`，脚本会优先尝试 `https://www.xiaohongshu.com/explore/{note_id}?xsec_source=pc_search`。
+- 同时会在本地 `xhs_origin_data.csv` 和 `xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv` 中查找同 ID 的历史 `xsec_token` 链接。
+- 候选入口包括原始链接、`explore`、`discovery/item`、`search_result`、PC 分享参数和 App 分享参数组合。
+- 如果候选入口仍停留在 `404`、`300031`、登录安全页或明显广告页，脚本会拒绝把错误页面内容写入 CSV，并继续尝试下一个候选入口或浏览器账号。
+- 如果账号处于 `300013` 风控状态，应暂停采集，等网页端普通浏览恢复后再运行。
 - 最稳妥的输入仍然是完整分享链接，例如含 `source=webshare&xsec_token=...&xsec_source=pc_share` 的链接。
 
 English:
@@ -608,9 +618,11 @@ Argument summary:
 
 Rednote/Xiaohongshu bare-link handling:
 
-- If the input is only `https://www.xiaohongshu.com/discovery/item/{note_id}`, the script first searches local `xhs_origin_data.csv` and `xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv` for a historical URL with `xsec_token` for the same note ID.
-- If a historical token is found, it automatically switches to the tokenized webshare URL.
-- If no local token is found, the script opens the page and tries to parse one. If the account is under `300013` rate limit, stop collection and retry after normal web browsing recovers.
+- If the input is only `https://www.xiaohongshu.com/discovery/item/{note_id}`, the script first tries `https://www.xiaohongshu.com/explore/{note_id}?xsec_source=pc_search`.
+- It also searches local `xhs_origin_data.csv` and `xhs_Data_Table_on_Channel_Public_Opinion_Monitoring_2026.csv` for a historical URL with `xsec_token` for the same note ID.
+- Candidate entrances include the original URL, `explore`, `discovery/item`, `search_result`, PC-share parameters, and App-share parameter combinations.
+- If a candidate still lands on `404`, `300031`, a login/security page, or an obvious ad page, the script refuses to write that wrong page into CSV and continues with the next candidate or browser account.
+- If the account is under `300013` rate limit, stop collection and retry after normal web browsing recovers.
 - The safest input is still the full share URL containing `source=webshare&xsec_token=...&xsec_source=pc_share`.
 
 ---
@@ -635,7 +647,7 @@ Rednote/Xiaohongshu bare-link handling:
 https://www.xiaohongshu.com/discovery/item/...
 ```
 
-小红书建议优先粘贴完整分享文案或带 `xsec_token` 的 webshare 链接。只有裸 `discovery/item/{id}` 链接时，脚本会尝试用本地历史 token 缓存自动补齐。
+小红书建议优先粘贴完整分享文案或带 `xsec_token` 的 webshare 链接。只有裸 `discovery/item/{id}` 链接时，脚本会优先尝试 `/explore/{id}?xsec_source=pc_search`，再尝试历史 token、PC 分享入口和 App 分享入口。如果所有入口都停留在安全页或广告页，脚本会拒绝写入错误内容并提示重试。
 
 抖音：
 
@@ -663,7 +675,7 @@ Rednote/Xiaohongshu:
 https://www.xiaohongshu.com/discovery/item/...
 ```
 
-For Rednote/Xiaohongshu, full share text or a webshare URL with `xsec_token` is preferred. If only a bare `discovery/item/{id}` URL is provided, the script tries to fill the token from local history.
+For Rednote/Xiaohongshu, full share text or a webshare URL with `xsec_token` is preferred. If only a bare `discovery/item/{id}` URL is provided, the script first tries `/explore/{id}?xsec_source=pc_search`, then local historical tokens, PC-share entrances, and App-share entrances. If all entrances remain on security or ad pages, the script refuses to write the wrong content and asks for a retry.
 
 Douyin:
 
@@ -762,6 +774,7 @@ English:
 
 - 小红书评论追加到 `Pipeline/xhs_comments.csv`。
 - 抖音评论追加到 `Pipeline/dy_comments.csv`。
+- 批量评论导出脚本会按帖子 ID 保存独立 Excel 到 `Comment_Data/xhs/` 和 `Comment_Data/dy/`。
 
 评论字段包括：
 
@@ -782,6 +795,25 @@ English:
 - 回复目标用户ID
 - 回复目标用户名称
 
+如果要从两张监控总表批量导出所有帖子的评论区 Excel，使用：
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 Pipeline/export_comment_sections.py --platform all --max-posts-per-platform 0 --limit-comments 0 --headed
+```
+
+常用参数：
+
+| 参数 | 说明 |
+|---|---|
+| `--platform all/xhs/dy` | 导出双平台、小红书或抖音 |
+| `--max-posts-per-platform 0` | 每个平台处理全部帖子；调试时可改成小数字 |
+| `--limit-comments 0` | 每条帖子导出全部评论；调试时可改成 `50` |
+| `--note-id id1,id2` | 只导出指定帖子 ID |
+| `--overwrite` | 覆盖已有同名 XLSX |
+| `--reset-output` | 删除所选平台旧评论 Excel 后重新导出 |
+| `--dry-run` | 只预览，不访问平台 |
+
 English:
 
 Comment collection only works for one specific post/video link from the single-post or clipboard workflow. It does not collect comments for keyword batch results automatically.
@@ -795,6 +827,7 @@ Outputs:
 
 - Rednote/Xiaohongshu comments are appended to `Pipeline/xhs_comments.csv`.
 - Douyin comments are appended to `Pipeline/dy_comments.csv`.
+- The batch comment export script saves one Excel workbook per post ID into `Comment_Data/xhs/` and `Comment_Data/dy/`.
 
 Comment fields include:
 
@@ -814,6 +847,25 @@ Comment fields include:
 - Reply target comment ID
 - Reply target user ID
 - Reply target username
+
+To batch export comment-section Excel files for all posts in both monitoring tables, run:
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 Pipeline/export_comment_sections.py --platform all --max-posts-per-platform 0 --limit-comments 0 --headed
+```
+
+Common arguments:
+
+| Argument | Description |
+|---|---|
+| `--platform all/xhs/dy` | Export both platforms, Rednote/Xiaohongshu only, or Douyin only |
+| `--max-posts-per-platform 0` | Process all posts per platform; use a small number for debugging |
+| `--limit-comments 0` | Export all comments per post; use `50` for debugging |
+| `--note-id id1,id2` | Export only specific post IDs |
+| `--overwrite` | Overwrite existing XLSX files |
+| `--reset-output` | Delete old comment workbooks for the selected platform before exporting |
+| `--dry-run` | Preview only, without visiting the platforms |
 
 ---
 
@@ -1237,6 +1289,108 @@ python3 Pipeline/dy_amplification_export.py \
   --dry-run
 ```
 
+### 18.1 无人值守日循环 / Unattended Daily Loop
+
+中文：
+
+根目录 `daily_work.py` 用于循环执行完整日常流程，适合放在本机长期运行。默认流程是：
+
+1. 小红书和抖音双平台关键词搜索。
+2. 清洗双平台总表。
+3. 双平台并行 AI 填写。
+4. 再次清洗双平台总表。
+5. Hype 模型写入加热 Excel。
+6. AI 判断写入加热 Excel。
+7. 休眠后继续下一轮。
+
+默认关键词为：
+
+```text
+滴滴打车、滴滴快车、滴滴司机、滴滴宠物、滴滴安全、滴滴女司机、滴滴专车、滴滴特惠、滴滴巴士、滴滴香卡、滴滴豪华车、滴滴拼车、滴滴车站、滴滴海外打车、滴滴轻享、滴滴出租车、滴滴特快、滴滴 AI打车、滴滴 AI 叫车、滴滴IP彩蛋车
+```
+
+默认发布时间筛选是 `一周内`，默认 `--max-notes 0` 表示每个关键词不设硬上限。
+
+先测试一轮：
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 daily_work.py --once --verbose-stdout
+```
+
+长期循环运行：
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 daily_work.py
+```
+
+常用参数：
+
+| 参数 | 默认值 | 说明 |
+|---|---:|---|
+| `--once` | 关闭 | 只执行一轮后退出 |
+| `--publish-time` | `一周内` | 关键词搜索发布时间筛选 |
+| `--max-notes` | `0` | 每个平台每个关键词最大导出数；`0` 表示不设上限 |
+| `--scroll-rounds` | `10` | 每个关键词搜索滚动轮数 |
+| `--keyword-sleep` | `20` | 关键词之间休眠秒数 |
+| `--cycle-sleep` | `1800` | 每轮结束后的休眠秒数 |
+| `--ai-concurrency` | `3` | 单平台 AI 填写并发数 |
+| `--hype-limit` | `0` | 加热候选最多判断行数；`0` 表示不设上限 |
+| `--dry-run` | 关闭 | 只预览加热写入，不写 Excel |
+
+账号被限流或出现安全页时，不建议继续无人值守循环。应先停止脚本，等网页端普通浏览恢复后再启动，并适当调大 `--keyword-sleep` 和 `--cycle-sleep`。
+
+English:
+
+The root `daily_work.py` runs the full daily workflow in a loop and is suitable for unattended local operation. The default workflow is:
+
+1. Run dual-platform keyword search for Rednote/Xiaohongshu and Douyin.
+2. Clean both platform monitoring tables.
+3. Run parallel AI filling for both platforms.
+4. Clean both tables again.
+5. Write amplification candidates with the Hype model.
+6. Write amplification candidates with AI judgment.
+7. Sleep and start the next cycle.
+
+Default keywords:
+
+```text
+滴滴打车、滴滴快车、滴滴司机、滴滴宠物、滴滴安全、滴滴女司机、滴滴专车、滴滴特惠、滴滴巴士、滴滴香卡、滴滴豪华车、滴滴拼车、滴滴车站、滴滴海外打车、滴滴轻享、滴滴出租车、滴滴特快、滴滴 AI打车、滴滴 AI 叫车、滴滴IP彩蛋车
+```
+
+The default publish-time filter is `一周内`, and `--max-notes 0` means no hard limit per keyword.
+
+Run one test cycle:
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 daily_work.py --once --verbose-stdout
+```
+
+Run continuously:
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 daily_work.py
+```
+
+Common arguments:
+
+| Argument | Default | Description |
+|---|---:|---|
+| `--once` | off | Run one cycle and exit |
+| `--publish-time` | `一周内` | Keyword search publish-time filter |
+| `--max-notes` | `0` | Max rows per platform per keyword; `0` means unlimited |
+| `--scroll-rounds` | `10` | Scroll rounds per keyword search |
+| `--keyword-sleep` | `20` | Sleep seconds between keywords |
+| `--cycle-sleep` | `1800` | Sleep seconds after each full cycle |
+| `--ai-concurrency` | `3` | Per-platform AI filling concurrency |
+| `--hype-limit` | `0` | Max amplification candidates to judge; `0` means unlimited |
+| `--dry-run` | off | Preview amplification output without writing Excel |
+
+If the account is rate-limited or security pages appear, stop the unattended loop first. Restart only after normal web browsing recovers, and consider increasing `--keyword-sleep` and `--cycle-sleep`.
+
 ---
 
 ## 19. 登录态与反爬注意事项 / Login Session and Anti-Bot Notes
@@ -1248,12 +1402,23 @@ python3 Pipeline/dy_amplification_export.py \
 建议：
 
 - 先在 Chrome 中正常登录小红书和抖音。
+- 如果 Edge 也登录了备用账号，单帖修复和小红书兜底会优先按可用浏览器账号轮换尝试，避免同一账号连续撞安全页。
 - 采集时保留可见 Chrome 页面，不要快速关闭。
 - 关键词采集不要设置过大数量。
 - 不要连续高频重复点击。
 - 如果出现验证码、安全验证、登录墙，请在打开的浏览器中手动处理后再重试。
-- 如果小红书链接缺少 `xsec_token`，脚本会先尝试从本地历史数据查同 ID 的 tokenized 链接；如果仍失败，请重新复制完整分享链接。
+- 如果小红书链接缺少 `xsec_token`，脚本会优先尝试 `/explore/{note_id}?xsec_source=pc_search`、本地历史 token 和多种分享入口；如果仍失败，请重新复制完整分享链接。
+- 小红书脚本会拒绝把 `404`、`300031`、安全限制页或明显广告页内容写进 CSV。
 - 如果抖音链接是短链，脚本会尝试打开页面解析真实 `aweme_id`。
+
+如果需要使用真实浏览器 DOM 兜底读取当前已打开的小红书页面，macOS 需要允许浏览器执行 AppleScript JavaScript。可以在浏览器菜单中开启“查看 > 开发者 > 允许 Apple 事件中的 JavaScript”，也可以运行：
+
+```bash
+defaults write com.google.Chrome AppleScriptEnabled -bool true
+defaults write com.microsoft.Edge AppleScriptEnabled -bool true
+```
+
+设置后需要重启 Chrome 或 Edge。
 
 English:
 
@@ -1262,12 +1427,23 @@ The scripts clone the local Chrome default profile into a temporary directory an
 Recommendations:
 
 - Log in to Rednote/Xiaohongshu and Douyin in Chrome first.
+- If Edge is also logged in with a backup account, single-post repair and Rednote/Xiaohongshu fallback can rotate across available browser accounts, reducing repeated failures on the same account.
 - Keep the visible Chrome page open during collection.
 - Do not use an overly large keyword collection count.
 - Avoid repeated high-frequency clicks.
 - If CAPTCHA, security verification, or login walls appear, complete them manually in the opened browser and retry.
-- If a Rednote/Xiaohongshu link is missing `xsec_token`, the script first tries to find a tokenized URL for the same note ID from local history. If that still fails, copy a fresh full share URL.
+- If a Rednote/Xiaohongshu link is missing `xsec_token`, the script first tries `/explore/{note_id}?xsec_source=pc_search`, local historical tokens, and multiple share entrances. If that still fails, copy a fresh full share URL.
+- The Rednote/Xiaohongshu script refuses to write `404`, `300031`, security-limit pages, or obvious ad pages into CSV.
 - If a Douyin link is a short link, the script attempts to open the page and resolve the real `aweme_id`.
+
+If the real-browser DOM fallback is needed for a currently opened Rednote/Xiaohongshu page, macOS must allow the browser to execute JavaScript through AppleScript. Enable `View > Developer > Allow JavaScript from Apple Events` in the browser menu, or run:
+
+```bash
+defaults write com.google.Chrome AppleScriptEnabled -bool true
+defaults write com.microsoft.Edge AppleScriptEnabled -bool true
+```
+
+Restart Chrome or Edge after changing this setting.
 
 ---
 
@@ -1523,6 +1699,30 @@ This means the current account or browser session is rate-limited by the platfor
 
 This project does not provide bypasses for platform safety controls, identity spoofing, or risk-control circumvention. The code only supports conservative throttling, fewer requests, and clearer failure messages.
 
+### 21.8 小红书单帖停在 404/300031 或真实浏览器 DOM 兜底失败
+
+中文：
+
+如果日志出现“所有小红书候选入口都未进入目标详情页”或“页面仍停留在 404/300031 安全页”，说明当前账号或入口无法稳定打开目标笔记。处理顺序：
+
+1. 在 Chrome 或 Edge 中手动打开目标链接，确认能看到真实帖子内容，而不是安全页、广告页或首页。
+2. 优先尝试 `https://www.xiaohongshu.com/explore/{note_id}?xsec_source=pc_search` 形式。
+3. 如果你手上有完整分享链接，优先粘贴带 `xsec_token` 的完整链接。
+4. 如果日志提示 `Executing JavaScript through AppleScript is turned off`，开启浏览器菜单“查看 > 开发者 > 允许 Apple 事件中的 JavaScript”，或运行第 19 节中的 `defaults write` 命令并重启浏览器。
+5. 如果 Social_Media_Copilot 插件能在真实页面中复制笔记信息，可以先在浏览器里打开帖子并使用插件复制，再回到 Pipeline 重新执行。
+6. 如果普通网页浏览也提示 `300013` 或 Too many requests，停止脚本并等待账号恢复。
+
+English:
+
+If the log says all Rednote/Xiaohongshu candidate entrances failed, or the page remains on `404` / `300031`, the current account or entrance cannot reliably open the target note. Recommended order:
+
+1. Open the target URL manually in Chrome or Edge and confirm that the real post is visible, not a security page, ad page, or homepage.
+2. Prefer `https://www.xiaohongshu.com/explore/{note_id}?xsec_source=pc_search`.
+3. If you have a full share URL, use the complete URL with `xsec_token` first.
+4. If the log says `Executing JavaScript through AppleScript is turned off`, enable `View > Developer > Allow JavaScript from Apple Events`, or run the `defaults write` commands in section 19 and restart the browser.
+5. If Social_Media_Copilot can copy note information from the real page, open the post in the browser, copy through the plugin, then rerun Pipeline.
+6. If normal web browsing also shows `300013` or Too many requests, stop the script and wait for the account to recover.
+
 ---
 
 ## 22. 安全注意事项 / Security Notes
@@ -1574,6 +1774,16 @@ Pipeline/gui_exports/
 11. 确认候选合理后取消 dry-run，写入对应平台 Excel。
 12. 如需进一步人工判断，打开 `Hype_Something/start_tool.command` 或点击 GUI 中“打开Hype软件界面”。
 
+无人值守方式：
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 daily_work.py --once --verbose-stdout
+python3 daily_work.py
+```
+
+第一行用于测试一轮，第二行用于持续循环。账号出现风控时请先停止循环。
+
 English:
 
 1. Open Chrome and confirm login status for Rednote/Xiaohongshu and Douyin.
@@ -1589,6 +1799,16 @@ English:
 11. If the candidates look reasonable, disable dry-run and write to the platform workbook.
 12. For further manual judgment, open `Hype_Something/start_tool.command` or click `打开Hype软件界面` in the GUI.
 
+Unattended mode:
+
+```bash
+cd /Users/didi/Downloads/Public_Opinion_Analysis
+python3 daily_work.py --once --verbose-stdout
+python3 daily_work.py
+```
+
+The first command runs one test cycle. The second command runs continuously. Stop the loop first if the account hits platform rate limits.
+
 ---
 
 ## 24. 维护说明 / Maintenance Notes
@@ -1599,6 +1819,8 @@ English:
 - 平台接口字段可能变化。如果监控总表出现空字段，检查对应的 `xhs_*` 或 `dy_*` 归一化脚本。
 - 加热 Excel 表头如果被人工改动，导出脚本可能需要同步更新表头别名。
 - 抖音和小红书链路是独立的。修改新平台逻辑时，不要直接改旧平台脚本，优先改对应 `dy_*` 或 `xhs_*` 文件。
+- 可视化大屏表格长文本依赖统一的截断和悬浮预览逻辑。新增表格时优先复用现有渲染函数，避免长文本把列撑窄。
+- 小红书单帖采集应继续复用候选入口生成和安全页识别逻辑，不要把 404、安全限制页或广告页作为正常内容写入总表。
 
 English:
 
@@ -1606,3 +1828,5 @@ English:
 - Platform API fields may change. If normalized monitoring fields become blank, inspect the corresponding `xhs_*` or `dy_*` normalization script.
 - If workbook headers are manually changed, the export script may need updated header aliases.
 - Douyin and Rednote/Xiaohongshu flows are independent. When changing one platform, avoid modifying the other platform scripts unless necessary.
+- Visualization tables rely on shared truncation and hover-preview behavior. Reuse the existing table rendering helpers when adding new tables, so long text does not squeeze columns.
+- Rednote/Xiaohongshu single-post collection should keep using candidate entrance generation and security-page detection. Do not write 404, security-limit, or ad pages as normal content.

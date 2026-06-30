@@ -314,48 +314,75 @@ def with_url_query(url: str, **updates: str) -> str:
 
 def candidate_note_urls(url: str, note_id: str, xsec_source: str, xsec_token: str) -> List[str]:
     parsed = urllib.parse.urlparse(url)
-    params = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
-    if (
-        not xsec_token
-        and note_id
-        and parsed.path.rstrip("/") == f"/explore/{note_id}"
-        and (xsec_source or params.get("xsec_source", [""])[0] or "pc_search") == "pc_search"
-    ):
-        query = urllib.parse.urlencode({"xsec_source": "pc_search"})
-        canonical = urllib.parse.urlunparse(("https", "www.xiaohongshu.com", f"/explore/{note_id}", "", query, parsed.fragment or ""))
-        result = []
-        for candidate in (url, canonical):
-            if candidate and candidate not in result:
-                result.append(candidate)
-        return result
-    if xsec_token:
-        params["xsec_token"] = [xsec_token]
-    if xsec_source:
-        params["xsec_source"] = [xsec_source]
-    if xsec_token and not params.get("source") and (xsec_source or "").startswith("pc_"):
-        params["source"] = ["webshare"]
-    if xsec_token and not params.get("xhsshare") and (xsec_source or "").startswith("pc_"):
-        params["xhsshare"] = ["pc_web"]
-    query = urllib.parse.urlencode(params, doseq=True)
-    paths = [
-        parsed.path or f"/discovery/item/{note_id}",
-        f"/discovery/item/{note_id}",
-        f"/explore/{note_id}",
-        f"/search_result/{note_id}",
-    ]
-    candidates = []
-    for path in paths:
-        if note_id not in path:
-            continue
-        candidates.append(urllib.parse.urlunparse(("https", "www.xiaohongshu.com", path, "", query, "")))
-    if url:
-        candidates.insert(0, url)
-    result = []
+    original_params = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+    original_source = (original_params.get("xsec_source") or [""])[0]
+    original_token = (original_params.get("xsec_token") or [""])[0]
+    source = xsec_source or original_source or "pc_search"
+    token = xsec_token or original_token
+    cached_url = cached_tokenized_url(note_id)
+    cached_params: Dict[str, List[str]] = {}
+    if cached_url:
+        cached_params = urllib.parse.parse_qs(urllib.parse.urlparse(cached_url).query, keep_blank_values=True)
+
+    result: List[str] = []
     seen = set()
-    for candidate in candidates:
-        if candidate and candidate not in seen:
-            seen.add(candidate)
-            result.append(candidate)
+
+    def add(candidate: str) -> None:
+        if not candidate:
+            return
+        clean = candidate.replace("&amp;", "&").rstrip("。；;，,）)】]")
+        if note_id and note_id not in clean:
+            return
+        if clean not in seen:
+            seen.add(clean)
+            result.append(clean)
+
+    def build(path: str, params: Dict[str, str]) -> str:
+        query = urllib.parse.urlencode({key: value for key, value in params.items() if value})
+        return urllib.parse.urlunparse(("https", "www.xiaohongshu.com", path, "", query, ""))
+
+    pc_search = build(f"/explore/{note_id}", {"xsec_source": "pc_search"})
+    if not token:
+        # 裸笔记链接在新版小红书更容易从 explore + pc_search 入口进入详情页。
+        add(pc_search)
+    add(url)
+    add(cached_url)
+
+    token_sets: List[Tuple[str, str, Dict[str, str]]] = []
+    if token:
+        token_sets.append((source, token, {key: values[0] for key, values in original_params.items() if values}))
+    cached_token = (cached_params.get("xsec_token") or [""])[0]
+    cached_source = (cached_params.get("xsec_source") or [""])[0]
+    if cached_token:
+        token_sets.append((cached_source or "pc_share", cached_token, {key: values[0] for key, values in cached_params.items() if values}))
+
+    for item_source, item_token, base_params in token_sets:
+        params = dict(base_params)
+        params["xsec_token"] = item_token
+        params["xsec_source"] = item_source or "pc_share"
+        if (params["xsec_source"] or "").startswith("pc_"):
+            params.setdefault("source", "webshare")
+            params.setdefault("xhsshare", "pc_web")
+        for path in (f"/explore/{note_id}", f"/discovery/item/{note_id}", f"/search_result/{note_id}"):
+            add(build(path, params))
+        app_params = {
+            "app_platform": "ios",
+            "app_version": "9.34.4",
+            "type": "normal",
+            "xhsshare": "CopyLink",
+            "xsec_source": "app_share",
+            "xsec_token": item_token,
+        }
+        add(build(f"/explore/{note_id}", app_params))
+
+    source_candidates = []
+    for candidate_source in (source, original_source, "pc_search", "pc_feed", "pc_share"):
+        if candidate_source and candidate_source not in source_candidates:
+            source_candidates.append(candidate_source)
+    for candidate_source in source_candidates:
+        add(build(f"/explore/{note_id}", {"xsec_source": candidate_source}))
+        add(build(f"/discovery/item/{note_id}", {"xsec_source": candidate_source}))
+        add(build(f"/search_result/{note_id}", {"xsec_source": candidate_source}))
     return result
 
 
@@ -580,7 +607,11 @@ def page_security_status(page: CdpClient, note_id: str = "") -> Dict[str, Any]:
     || /Sorry,\s*This Page Isn't Available Right Now/i.test(title)
     || /Sorry,\s*This Page Isn't Available Right Now/i.test(body);
   const target = !noteId || href.includes(noteId);
-  return { href, title, security, target, body };
+  const usable = target && !security && (
+    /说点什么|共\s*\d+\s*条评论|下载图片|复制笔记信息|同步飞书|导出评论/.test(body)
+    || !!document.querySelector('#noteContainer, .note-container, [class*="note-detail"], [class*="interaction"], [class*="comments"]')
+  );
+  return { href, title, security, target, usable, body };
 })(""" + note_id_json + r""")
 """
     try:
@@ -591,15 +622,32 @@ def page_security_status(page: CdpClient, note_id: str = "") -> Dict[str, Any]:
 
 
 def wait_for_note_page(page: CdpClient, candidates: List[str], timeout: float, note_id: str = "") -> str:
-    original_url = candidates[0] if candidates else ""
+    errors: List[str] = []
     for index, candidate in enumerate(candidates, start=1):
-        wait_for_page_signer(page, candidate, timeout)
-        time.sleep(1.0)
-        status = page_security_status(page, note_id)
-        if not status.get("security") and status.get("target", True):
-            if index > 1:
-                print(f"小红书访问链接已切换到候选 {index}/{len(candidates)}：{status.get('href') or candidate}", flush=True)
-            return str(status.get("href") or candidate)
+        try:
+            wait_for_page_signer(page, candidate, timeout)
+        except Exception as exc:
+            errors.append(f"{index}/{len(candidates)} {candidate}: {exc}")
+            print(
+                f"小红书候选链接 {index}/{len(candidates)} 等待页面签名失败，继续尝试下一种入口：{candidate}；{exc}",
+                flush=True,
+            )
+            continue
+
+        status: Dict[str, Any] = {}
+        for settle_round in range(3):
+            time.sleep(0.8)
+            try:
+                page.evaluate("window.scrollBy(0, Math.min(360, Math.floor(window.innerHeight / 3 || 240)))")
+            except Exception:
+                pass
+            status = page_security_status(page, note_id)
+            if status.get("usable") or (not status.get("security") and status.get("target", True)):
+                if index > 1:
+                    print(f"小红书访问链接已切换到候选 {index}/{len(candidates)}：{status.get('href') or candidate}", flush=True)
+                return str(status.get("href") or candidate)
+            if status.get("security") or not status.get("target", True):
+                break
         if not status.get("target", True):
             print(
                 f"小红书候选链接 {index}/{len(candidates)} 已跳转到非目标页面，继续尝试下一种入口："
@@ -612,7 +660,11 @@ def wait_for_note_page(page: CdpClient, candidates: List[str], timeout: float, n
             f"{status.get('href') or candidate}",
             flush=True,
         )
-    return original_url
+    detail = " | ".join(errors[-3:])
+    raise RuntimeError(
+        "所有小红书候选入口都未进入目标详情页，已拒绝继续写入安全页或广告页。"
+        f"目标 note_id={note_id}。最后错误：{detail}"
+    )
 
 
 def page_state(page: CdpClient) -> Dict[str, Any]:
@@ -952,6 +1004,41 @@ def page_fallback_payload(page: CdpClient, note_id: str, source_url: str) -> Dic
     }
     return '';
   };
+  const decodeJsonString = (value) => {
+    const text = String(value || '');
+    if (!text) return '';
+    try {
+      return clean(JSON.parse('"' + text.replace(/"/g, '\\"') + '"'));
+    } catch (_error) {
+      return clean(text.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\u002F/g, '/').replace(/\\u0026/g, '&'));
+    }
+  };
+  const scriptText = Array.from(document.scripts || [])
+    .map((node) => node.textContent || '')
+    .filter((text) => !noteId || text.includes(noteId))
+    .join('\n')
+    .slice(0, 800000);
+  const scriptValue = (names, maxLen = 10000) => {
+    for (const name of names) {
+      const patterns = [
+        new RegExp('"' + name + '"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"', 'i'),
+        new RegExp("'" + name + "'\\s*:\\s*'((?:\\\\.|[^'\\\\])*)'", 'i')
+      ];
+      for (const pattern of patterns) {
+        const match = scriptText.match(pattern);
+        const value = match ? decodeJsonString(match[1]) : '';
+        if (value && value.length <= maxLen && value !== '[]' && value !== '{}') return value;
+      }
+    }
+    return '';
+  };
+  const scriptNumber = (names) => {
+    for (const name of names) {
+      const match = scriptText.match(new RegExp('"' + name + '"\\s*:\\s*"?([0-9]+(?:\\.[0-9]+)?\\s*(?:万|千|w|W|k|K)?)"?', 'i'));
+      if (match) return clean(match[1]);
+    }
+    return '';
+  };
   const firstText = (selectors, minLen = 1, maxLen = 5000) => {
     for (const selector of selectors) {
       for (const node of Array.from(document.querySelectorAll(selector))) {
@@ -964,6 +1051,7 @@ def page_fallback_payload(page: CdpClient, note_id: str, source_url: str) -> Dic
   const escapeRe = (value) => String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const allText = clean(document.body ? document.body.innerText : '');
   const titleCandidates = [
+    scriptValue(['title', 'display_title', 'displayTitle'], 220),
     firstText(['h1', '.title', '[class*="title"]'], 2, 180),
     meta('og:title'),
     meta('twitter:title'),
@@ -979,6 +1067,7 @@ def page_fallback_payload(page: CdpClient, note_id: str, source_url: str) -> Dic
   const targetNotePresent = !noteId || href.includes(noteId);
 
   const descCandidates = [
+    scriptValue(['desc', 'desc_v2', 'content', 'description'], 12000),
     firstText(['#detail-desc', '.note-content', '.desc', '[class*="desc"]', '[class*="content"]'], 3, 8000),
     meta('description'),
     meta('og:description'),
@@ -988,6 +1077,7 @@ def page_fallback_payload(page: CdpClient, note_id: str, source_url: str) -> Dic
   desc = desc.replace(/展开全部$/, '').trim();
 
   const authorCandidates = [
+    scriptValue(['nickname', 'nick_name', 'user_nickname'], 100),
     firstText(['#noteContainer [class*="author"] [class*="name"]', '#noteContainer [class*="user"] [class*="name"]', '#noteContainer [class*="nickname"]'], 1, 80),
     firstText(['[class*="author"] [class*="name"]', '[class*="user"] [class*="name"]', '[class*="nickname"]'], 1, 80),
     meta('author')
@@ -1039,10 +1129,10 @@ def page_fallback_payload(page: CdpClient, note_id: str, source_url: str) -> Dic
     .map((node) => clean(node.innerText || node.textContent || ''))
     .filter((text) => text && text.length <= 120);
   const joined = texts.join(' | ') + ' | ' + allText.slice(0, 12000);
-  let likedCount = parseCountText(joined, ['点赞', '赞']);
-  let collectedCount = parseCountText(joined, ['收藏']);
-  let commentCount = parseCountText(joined, ['评论']);
-  let shareCount = parseCountText(joined, ['分享']);
+  let likedCount = scriptNumber(['liked_count', 'likedCount', 'like_count', 'likeCount']) || parseCountText(joined, ['点赞', '赞']);
+  let collectedCount = scriptNumber(['collected_count', 'collectedCount', 'collect_count', 'collectCount']) || parseCountText(joined, ['收藏']);
+  let commentCount = scriptNumber(['comment_count', 'commentCount', 'comments_count', 'commentsCount']) || parseCountText(joined, ['评论']);
+  let shareCount = scriptNumber(['share_count', 'shareCount', 'shares_count', 'sharesCount']) || parseCountText(joined, ['分享']);
   const bottomCounts = allText.match(/说点什么[.。…·\s]*([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?)\s+([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?)\s+([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?)(?:\s+([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?))?/);
   if (bottomCounts) {
     likedCount = likedCount || bottomCounts[1];
@@ -1051,8 +1141,9 @@ def page_fallback_payload(page: CdpClient, note_id: str, source_url: str) -> Dic
     shareCount = shareCount || (bottomCounts[4] || '');
   }
 
+  const scriptTime = scriptNumber(['time', 'create_time', 'createTime', 'publish_time', 'publishTime']);
   const timeMatch = allText.match(/(20\d{2}[-/.年]\s*\d{1,2}[-/.月]\s*\d{1,2}(?:[日号]?\s+\d{1,2}:\d{2}(?::\d{2})?)?|(?:昨天|前天|今天)\s*\d{1,2}:\d{2}|刚刚|\d+\s*(?:秒|分钟|小时|天)前)/);
-  const publishTime = timeMatch ? clean(timeMatch[1].replace(/年|月/g, '-').replace(/日|号/g, '')) : '';
+  const publishTime = scriptTime || (timeMatch ? clean(timeMatch[1].replace(/年|月/g, '-').replace(/日|号/g, '')) : '');
 
   const images = Array.from(document.images || [])
     .map((img) => img.currentSrc || img.src || img.getAttribute('src') || '')
@@ -1065,7 +1156,10 @@ def page_fallback_payload(page: CdpClient, note_id: str, source_url: str) -> Dic
     .filter((src) => /^https?:\/\//.test(src))
     .slice(0, 8);
 
-  const uniqueImages = Array.from(new Set(images));
+  const scriptImageUrls = Array.from(scriptText.matchAll(/https?:\\?\/\\?\/[^"'\\\s]+(?:sns-webpic|sns-img|notes_pre_post|xhscdn)[^"'\\\s]*/ig))
+    .map((match) => match[0].replace(/\\\//g, '/').replace(/\\u002F/g, '/').replace(/\\u0026/g, '&'))
+    .filter((src) => /^https?:\/\//.test(src));
+  const uniqueImages = Array.from(new Set(images.concat(scriptImageUrls)));
   const preferredImages = uniqueImages.filter((url) => /notes_pre_post|sns-webpic|sns-img/i.test(url));
   const imageList = (preferredImages.length ? preferredImages : uniqueImages).map((url) => ({ url_default: url, url }));
   const videoList = Array.from(new Set(videos)).map((url) => ({ url }));
@@ -1153,13 +1247,51 @@ LIVE_BROWSER_JS = r"""
     }
     return '';
   };
-  const allText = clean(document.body ? document.body.innerText : '');
+  const decodeJsonString = (value) => {
+    const text = String(value || '');
+    if (!text) return '';
+    try {
+      return clean(JSON.parse('"' + text.replace(/"/g, '\\"') + '"'));
+    } catch (_error) {
+      return clean(text.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\u002F/g, '/').replace(/\\u0026/g, '&'));
+    }
+  };
   const href = location.href || '';
+  const noteIdMatch = href.match(/(?:explore|discovery\/item|search_result)\/([0-9a-zA-Z]{24})/);
+  const noteId = noteIdMatch ? noteIdMatch[1] : '';
+  const scriptText = Array.from(document.scripts || [])
+    .map((node) => node.textContent || '')
+    .filter((text) => !noteId || text.includes(noteId))
+    .join('\n')
+    .slice(0, 800000);
+  const scriptValue = (names, maxLen = 10000) => {
+    for (const name of names) {
+      const patterns = [
+        new RegExp('"' + name + '"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"', 'i'),
+        new RegExp("'" + name + "'\\s*:\\s*'((?:\\\\.|[^'\\\\])*)'", 'i')
+      ];
+      for (const pattern of patterns) {
+        const match = scriptText.match(pattern);
+        const value = match ? decodeJsonString(match[1]) : '';
+        if (value && value.length <= maxLen && value !== '[]' && value !== '{}') return value;
+      }
+    }
+    return '';
+  };
+  const scriptNumber = (names) => {
+    for (const name of names) {
+      const match = scriptText.match(new RegExp('"' + name + '"\\s*:\\s*"?([0-9]+(?:\\.[0-9]+)?\\s*(?:万|千|w|W|k|K)?)"?', 'i'));
+      if (match) return clean(match[1]);
+    }
+    return '';
+  };
+  const allText = clean(document.body ? document.body.innerText : '');
   const pageTitle = clean(document.title || '');
   const isSecurityPage = /\/404|\/website-login\/error|error_code=300031|error_code=300017|sec_/i.test(href)
     || /Sorry,\s*This Page Isn't Available Right Now/i.test(pageTitle)
     || /Sorry,\s*This Page Isn't Available Right Now/i.test(allText.slice(0, 800));
   const titleCandidates = [
+    scriptValue(['title', 'display_title', 'displayTitle'], 220),
     firstText(['h1', '.title', '[class*="title"]'], 2, 180),
     meta('og:title'),
     meta('twitter:title'),
@@ -1168,6 +1300,7 @@ LIVE_BROWSER_JS = r"""
   let title = titleCandidates.find((item) => !/小红书|你的生活兴趣社区|登录/.test(item)) || titleCandidates[0] || '';
   title = title.replace(/\s*[-|_]\s*小红书.*$/, '').replace(/\s*小红书.*$/, '').trim();
   const descCandidates = [
+    scriptValue(['desc', 'desc_v2', 'content', 'description'], 12000),
     firstText(['#detail-desc', '.note-content', '.desc', '[class*="desc"]', '[class*="content"]'], 3, 8000),
     meta('description'),
     meta('og:description'),
@@ -1175,7 +1308,8 @@ LIVE_BROWSER_JS = r"""
   ].filter(Boolean).map(clean);
   let desc = descCandidates.find((item) => item && item !== title && !/^小红书/.test(item)) || '';
   desc = desc.replace(/展开全部$/, '').trim();
-  let author = firstText(['#noteContainer [class*="author"] [class*="name"]', '#noteContainer [class*="user"] [class*="name"]', '#noteContainer [class*="nickname"]'], 1, 80)
+  let author = scriptValue(['nickname', 'nick_name', 'user_nickname'], 100)
+    || firstText(['#noteContainer [class*="author"] [class*="name"]', '#noteContainer [class*="user"] [class*="name"]', '#noteContainer [class*="nickname"]'], 1, 80)
     || firstText(['[class*="author"] [class*="name"]', '[class*="user"] [class*="name"]', '[class*="nickname"]'], 1, 80)
     || meta('author');
   if (title) {
@@ -1206,10 +1340,10 @@ LIVE_BROWSER_JS = r"""
     }
     return '';
   };
-  let likedCount = parseCountText(allText, ['点赞', '赞']);
-  let collectedCount = parseCountText(allText, ['收藏']);
-  let commentCount = parseCountText(allText, ['评论']);
-  let shareCount = parseCountText(allText, ['分享']);
+  let likedCount = scriptNumber(['liked_count', 'likedCount', 'like_count', 'likeCount']) || parseCountText(allText, ['点赞', '赞']);
+  let collectedCount = scriptNumber(['collected_count', 'collectedCount', 'collect_count', 'collectCount']) || parseCountText(allText, ['收藏']);
+  let commentCount = scriptNumber(['comment_count', 'commentCount', 'comments_count', 'commentsCount']) || parseCountText(allText, ['评论']);
+  let shareCount = scriptNumber(['share_count', 'shareCount', 'shares_count', 'sharesCount']) || parseCountText(allText, ['分享']);
   const bottomCounts = allText.match(/说点什么[.。…·\s]*([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?)\s+([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?)\s+([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?)(?:\s+([0-9]+(?:\.[0-9]+)?\s*(?:万|千|w|W|k|K)?))?/);
   if (bottomCounts) {
     likedCount = likedCount || bottomCounts[1];
@@ -1217,13 +1351,17 @@ LIVE_BROWSER_JS = r"""
     commentCount = commentCount || bottomCounts[3];
     shareCount = shareCount || (bottomCounts[4] || '');
   }
+  const scriptTime = scriptNumber(['time', 'create_time', 'createTime', 'publish_time', 'publishTime']);
   const timeMatch = allText.match(/(20\d{2}[-/.年]\s*\d{1,2}[-/.月]\s*\d{1,2}(?:[日号]?\s+\d{1,2}:\d{2}(?::\d{2})?)?|(?:昨天|前天|今天)\s*\d{1,2}:\d{2}|刚刚|\d+\s*(?:秒|分钟|小时|天)前)/);
-  const publishTime = timeMatch ? clean(timeMatch[1].replace(/年|月/g, '-').replace(/日|号/g, '')) : '';
+  const publishTime = scriptTime || (timeMatch ? clean(timeMatch[1].replace(/年|月/g, '-').replace(/日|号/g, '')) : '');
   const images = Array.from(document.images || [])
     .map((img) => img.currentSrc || img.src || img.getAttribute('src') || '')
     .filter((src) => /^https?:\/\//.test(src))
     .filter((src) => !/avatar|qrcode|icon|logo|fe-platform\.xhscdn\.com\/platform|\/platform\//i.test(src));
-  const uniqueImages = Array.from(new Set(images));
+  const scriptImageUrls = Array.from(scriptText.matchAll(/https?:\\?\/\\?\/[^"'\\\s]+(?:sns-webpic|sns-img|notes_pre_post|xhscdn)[^"'\\\s]*/ig))
+    .map((match) => match[0].replace(/\\\//g, '/').replace(/\\u002F/g, '/').replace(/\\u0026/g, '&'))
+    .filter((src) => /^https?:\/\//.test(src));
+  const uniqueImages = Array.from(new Set(images.concat(scriptImageUrls)));
   const preferredImages = uniqueImages.filter((url) => /notes_pre_post|sns-webpic|sns-img/i.test(url));
   const imageList = (preferredImages.length ? preferredImages : uniqueImages).slice(0, 20).map((url) => ({ url_default: url, url }));
   return JSON.stringify({
@@ -1745,6 +1883,8 @@ def should_try_next_profile(exc: Exception) -> bool:
             "Chrome DevTools websocket",
             "Chrome websocket handshake failed",
             "小红书页面仍停留",
+            "候选入口都未进入",
+            "未进入目标详情页",
             "404/300031",
             "300031",
             "300017",
@@ -1945,8 +2085,16 @@ def run_with_live_browser_fallback(
                     export_ten_fields_csv(flat, summary_output)
                 return output, summary_output
             except Exception as exc:
-                errors.append(f"{app_name} {live_url}: {exc}")
-                print(f"XHS_LIVE_BROWSER_FALLBACK_FAILED: {app_name}: {exc}", flush=True)
+                message = str(exc)
+                errors.append(f"{app_name} {live_url}: {message}")
+                print(f"XHS_LIVE_BROWSER_FALLBACK_FAILED: {app_name}: {message}", flush=True)
+                if "允许 Apple 事件中的 JavaScript" in message or "AppleScript is turned off" in message:
+                    print(
+                        f"XHS_LIVE_BROWSER_FALLBACK_STOP: {app_name} 未开启 AppleScript JavaScript 权限，"
+                        "跳过该浏览器剩余候选入口。",
+                        flush=True,
+                    )
+                    break
     raise RuntimeError("所有小红书真实浏览器 DOM 兜底都失败：" + " | ".join(errors))
 
 

@@ -208,6 +208,21 @@ body {
   background: #ffffff;
 }
 
+.maintenance-action-row {
+  padding-top: 4px;
+}
+
+.maintenance-action {
+  color: var(--teal);
+  background: rgba(19, 132, 119, 0.08);
+  border-color: rgba(19, 132, 119, 0.22);
+}
+
+.maintenance-action:hover {
+  border-color: var(--teal);
+  background: #ffffff;
+}
+
 .operation-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
