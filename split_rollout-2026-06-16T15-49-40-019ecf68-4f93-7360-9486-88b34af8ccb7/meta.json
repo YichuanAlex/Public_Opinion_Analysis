@@ -2,6 +2,12 @@
   "original_file": "rollout-2026-06-16T15-49-40-019ecf68-4f93-7360-9486-88b34af8ccb7.jsonl",
   "max_size_mb": 25.0,
   "total_lines": 9480,
+  "notes": [
+    "part_3.jsonl 和 part_5.jsonl 超过 50MB，因 LFS 配额限制暂时无法上传",
+    "合并时需要这两个文件才能还原完整数据，当前上传的 15 个部分文件可正常合并但会缺少 2 行数据",
+    "可通过删除原大文件释放空间后重新上传这两个部分"
+  ],
+  "lfs_required_parts": ["part_3.jsonl", "part_5.jsonl"],
   "parts": [
     {
       "file": "part_1.jsonl",
