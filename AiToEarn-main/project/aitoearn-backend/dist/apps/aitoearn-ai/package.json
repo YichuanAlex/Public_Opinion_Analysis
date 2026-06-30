@@ -1,0 +1,7 @@
+{
+  "name": "aitoearn-ai",
+  "version": "0.0.1",
+  "types": "./src/main.d.ts",
+  "main": "./src/main.js",
+  "type": "commonjs"
+}

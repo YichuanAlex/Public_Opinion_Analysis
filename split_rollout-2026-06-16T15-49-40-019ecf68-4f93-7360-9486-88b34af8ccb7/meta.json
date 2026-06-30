@@ -1,96 +1,67 @@
 {
   "original_file": "rollout-2026-06-16T15-49-40-019ecf68-4f93-7360-9486-88b34af8ccb7.jsonl",
-  "max_size_mb": 25.0,
-  "total_lines": 9480,
-  "notes": [
-    "part_3.jsonl 和 part_5.jsonl 超过 50MB，因 LFS 配额限制暂时无法上传",
-    "合并时需要这两个文件才能还原完整数据，当前上传的 15 个部分文件可正常合并但会缺少 2 行数据",
-    "可通过删除原大文件释放空间后重新上传这两个部分"
-  ],
-  "lfs_required_parts": ["part_3.jsonl", "part_5.jsonl"],
+  "max_size_mb": 45.0,
+  "total_lines": 9488,
+  "original_total_lines": 9480,
+  "split_lines": 10,
   "parts": [
     {
       "file": "part_1.jsonl",
-      "lines": 5681,
-      "size_bytes": 21926868
+      "lines": 5683,
+      "size_bytes": 32633889
     },
     {
       "file": "part_2.jsonl",
-      "lines": 1,
-      "size_bytes": 10704585
+      "lines": 3,
+      "size_bytes": 43190571
     },
     {
       "file": "part_3.jsonl",
-      "lines": 1,
-      "size_bytes": 56421380
+      "lines": 10,
+      "size_bytes": 38887487
     },
     {
       "file": "part_4.jsonl",
-      "lines": 7,
-      "size_bytes": 10710009
+      "lines": 84,
+      "size_bytes": 41718868
     },
     {
       "file": "part_5.jsonl",
-      "lines": 1,
-      "size_bytes": 56421156
+      "lines": 402,
+      "size_bytes": 29902448
     },
     {
       "file": "part_6.jsonl",
-      "lines": 222,
-      "size_bytes": 19280500
+      "lines": 712,
+      "size_bytes": 42273145
     },
     {
       "file": "part_7.jsonl",
-      "lines": 261,
-      "size_bytes": 10867973
+      "lines": 815,
+      "size_bytes": 28491861
     },
     {
       "file": "part_8.jsonl",
-      "lines": 255,
-      "size_bytes": 19505621
+      "lines": 455,
+      "size_bytes": 30126069
     },
     {
       "file": "part_9.jsonl",
-      "lines": 457,
-      "size_bytes": 22767524
-    },
-    {
-      "file": "part_10.jsonl",
-      "lines": 55,
-      "size_bytes": 5445241
-    },
-    {
-      "file": "part_11.jsonl",
-      "lines": 760,
-      "size_bytes": 23046620
-    },
-    {
-      "file": "part_12.jsonl",
-      "lines": 192,
-      "size_bytes": 24402117
-    },
-    {
-      "file": "part_13.jsonl",
-      "lines": 263,
-      "size_bytes": 5723952
-    },
-    {
-      "file": "part_14.jsonl",
       "lines": 343,
       "size_bytes": 25011449
     },
     {
-      "file": "part_15.jsonl",
+      "file": "part_10.jsonl",
       "lines": 307,
       "size_bytes": 25823317
     },
     {
-      "file": "part_16.jsonl",
+      "file": "part_11.jsonl",
       "lines": 526,
       "size_bytes": 25664473
     },
     {
-      "file": "part_17.jsonl",
+      "file": "part_12.jsonl",
       "lines": 148,
       "size_bytes": 24976986
     }
