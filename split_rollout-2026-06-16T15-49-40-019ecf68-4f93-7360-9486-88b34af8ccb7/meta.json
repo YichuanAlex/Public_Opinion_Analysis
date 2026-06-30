@@ -1,0 +1,92 @@
+{
+  "original_file": "rollout-2026-06-16T15-49-40-019ecf68-4f93-7360-9486-88b34af8ccb7.jsonl",
+  "max_size_mb": 25.0,
+  "total_lines": 9480,
+  "parts": [
+    {
+      "file": "part_1.jsonl",
+      "lines": 5681,
+      "size_bytes": 21926868
+    },
+    {
+      "file": "part_2.jsonl",
+      "lines": 1,
+      "size_bytes": 10704585
+    },
+    {
+      "file": "part_3.jsonl",
+      "lines": 1,
+      "size_bytes": 56421380
+    },
+    {
+      "file": "part_4.jsonl",
+      "lines": 7,
+      "size_bytes": 10710009
+    },
+    {
+      "file": "part_5.jsonl",
+      "lines": 1,
+      "size_bytes": 56421156
+    },
+    {
+      "file": "part_6.jsonl",
+      "lines": 222,
+      "size_bytes": 19280500
+    },
+    {
+      "file": "part_7.jsonl",
+      "lines": 261,
+      "size_bytes": 10867973
+    },
+    {
+      "file": "part_8.jsonl",
+      "lines": 255,
+      "size_bytes": 19505621
+    },
+    {
+      "file": "part_9.jsonl",
+      "lines": 457,
+      "size_bytes": 22767524
+    },
+    {
+      "file": "part_10.jsonl",
+      "lines": 55,
+      "size_bytes": 5445241
+    },
+    {
+      "file": "part_11.jsonl",
+      "lines": 760,
+      "size_bytes": 23046620
+    },
+    {
+      "file": "part_12.jsonl",
+      "lines": 192,
+      "size_bytes": 24402117
+    },
+    {
+      "file": "part_13.jsonl",
+      "lines": 263,
+      "size_bytes": 5723952
+    },
+    {
+      "file": "part_14.jsonl",
+      "lines": 343,
+      "size_bytes": 25011449
+    },
+    {
+      "file": "part_15.jsonl",
+      "lines": 307,
+      "size_bytes": 25823317
+    },
+    {
+      "file": "part_16.jsonl",
+      "lines": 526,
+      "size_bytes": 25664473
+    },
+    {
+      "file": "part_17.jsonl",
+      "lines": 148,
+      "size_bytes": 24976986
+    }
+  ]
+}
